@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard มติที่ประชุมสภาเกษตรกรแห่งชาติ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --green-dark: #1a3d2b;
+    --green-mid: #2d6a4f;
+    --green-light: #52b788;
+    --green-pale: #b7e4c7;
+    --gold: #e9c46a;
+    --gold-dark: #c9a227;
+    --amber: #f4a261;
+    --red: #e63946;
+    --bg: #f4f7f2;
+    --surface: #ffffff;
+    --surface2: #f0f5ee;
+    --text: #1a2e1e;
+    --text-muted: #5a7063;
+    --border: #d4e6d0;
+    --shadow: 0 2px 16px rgba(26,61,43,0.08);
+    --shadow-lg: 0 8px 40px rgba(26,61,43,0.14);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 60%, #3d8b63 100%);
+    padding: 32px 40px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(82,183,136,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .header-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+  }
+  .header-logo {
+    width: 56px; height: 56px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+    border: 1.5px solid rgba(255,255,255,0.25);
+  }
+  .header-text h1 {
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.01em;
+  }
+  .header-text p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.72);
+    margin-top: 2px;
+  }
+  .header-badge {
+    background: rgba(255,255,255,0.13);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 10px;
+    padding: 8px 18px;
+    text-align: center;
+    color: rgba(255,255,255,0.9);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .header-badge strong {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 2px;
+  }
+
+  /* MAIN */
+  .main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 24px 48px;
+  }
+
+  /* FILTERS */
+  .filters {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-end;
+    box-shadow: var(--shadow);
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 5px; }
+  .filter-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .filter-group select, .filter-group input {
+    font-family: 'Sarabun', sans-serif;
+    font-size: 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    min-width: 160px;
+  }
+  .filter-group select:focus, .filter-group input:focus {
+    border-color: var(--green-light);
+  }
+  .filter-group input { min-width: 240px; }
+  .filter-reset {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    align-self: flex-end;
+  }
+  .filter-reset:hover { border-color: var(--green-light); color: var(--green-mid); }
+  .filter-count {
+    margin-left: auto;
+    align-self: flex-end;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .filter-count strong { color: var(--green-mid); font-weight: 700; }
+
+  /* KPI CARDS */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi-icon {
+    width: 50px; height: 50px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .kpi-icon.total { background: #e8f5e9; }
+  .kpi-icon.pending { background: #fff3e0; }
+  .kpi-icon.done { background: #e8f5e9; }
+  .kpi-icon.sessions { background: #e3f2fd; }
+  .kpi-info { flex: 1; }
+  .kpi-label { font-size: 12px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.03em; }
+  .kpi-value {
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin: 2px 0;
+  }
+  .kpi-value.total { color: var(--green-dark); }
+  .kpi-value.pending { color: #e07c24; }
+  .kpi-value.done { color: var(--green-mid); }
+  .kpi-value.sessions { color: #1565c0; }
+  .kpi-sub { font-size: 12px; color: var(--text-muted); }
+
+  /* CHARTS ROW */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.3fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .chart-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chart-title span { font-size: 15px; }
+  .chart-wrap { position: relative; height: 200px; }
+
+  /* TIMELINE */
+  .timeline-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .timeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .timeline-item {
+    flex: 0 0 auto;
+    min-width: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  .timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: calc(50% + 18px);
+    width: calc(100% - 36px);
+    height: 2px;
+    background: linear-gradient(90deg, var(--green-light), var(--green-pale));
+    z-index: 0;
+  }
+  .timeline-dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--green-mid);
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 2px 8px rgba(45,106,79,0.3);
+  }
+  .timeline-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin-top: 8px;
+    text-align: center;
+  }
+  .timeline-bar-wrap {
+    width: 100%;
+    padding: 6px 8px;
+    margin-top: 6px;
+  }
+  .timeline-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .timeline-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--green-light), var(--green-mid));
+    transition: width 0.6s ease;
+  }
+  .timeline-stats {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+    justify-content: center;
+  }
+  .timeline-stat {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .tstat-pending { background: #fff3e0; color: #e07c24; }
+  .tstat-done { background: #e8f5e9; color: var(--green-mid); }
+  .tstat-total { background: var(--surface2); color: var(--text-muted); }
+
+  /* PENDING ALERT */
+  .pending-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+  }
+  .pending-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .pending-badge {
+    background: #fff3e0;
+    border: 1px solid #ffcc80;
+    color: #e07c24;
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .pending-list { display: flex; flex-direction: column; gap: 8px; }
+  .pending-item {
+    background: #fffdf8;
+    border: 1px solid #ffe0b2;
+    border-left: 4px solid var(--amber);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+  .pending-item:hover { background: #fff8f0; }
+  .pending-item-session {
+    font-size: 11px;
+    background: #fff3e0;
+    color: #e07c24;
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .pending-item-topic {
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+    flex: 1;
+    line-height: 1.5;
+  }
+  .pending-item-status {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .pending-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 24px;
+    font-size: 14px;
+  }
+
+  /* TABLE */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .table-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  thead tr th {
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+    background: var(--surface2);
+  }
+  thead tr th:first-child { border-radius: 8px 0 0 0; }
+  thead tr th:last-child { border-radius: 0 8px 0 0; }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr:last-child { border-bottom: none; }
+  td { padding: 10px 12px; vertical-align: top; }
+  td.session-col {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--green-mid);
+    white-space: nowrap;
+  }
+  td.topic-col {
+    max-width: 320px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  td.owner-col {
+    max-width: 180px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  td.status-col { white-space: nowrap; }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .badge-pending { background: #fff3e0; color: #e07c24; border: 1px solid #ffcc80; }
+  .badge-done { background: #e8f5e9; color: var(--green-mid); border: 1px solid #a5d6a7; }
+  .badge-other { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+  .badge-owner-province { background: #f3e5f5; color: #7b1fa2; }
+  .badge-owner-committee { background: #e8f5e9; color: #2e7d32; }
+  .badge-owner-office { background: #e3f2fd; color: #1565c0; }
+
+  .table-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 40px;
+    font-size: 15px;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .modal-session {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--green-mid);
+    letter-spacing: 0.03em;
+    margin-bottom: 6px;
+  }
+  .modal-topic {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { background: var(--surface2); color: var(--text); }
+  .modal-section { margin-bottom: 16px; }
+  .modal-section-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .modal-section-content {
+    font-size: 14.5px;
+    color: var(--text);
+    line-height: 1.7;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 12px 14px;
+    white-space: pre-wrap;
+  }
+  .modal-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .modal-status.pending { background: #fff3e0; color: #e07c24; }
+  .modal-status.done { background: #e8f5e9; color: var(--green-mid); }
+  .modal-status.other { background: #e3f2fd; color: #1565c0; }
+
+  /* PAGINATION */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 16px;
+  }
+  .page-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Sarabun', sans-serif;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .page-btn:hover { background: var(--surface2); border-color: var(--green-light); }
+  .page-btn.active { background: var(--green-mid); border-color: var(--green-mid); color: white; font-weight: 700; }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .progress-ring-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 200px;
+  }
+  .progress-ring-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+    .header { padding: 20px; }
+    .main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-logo">🌾</div>
+    <div class="header-text">
+      <h1>Dashboard มติที่ประชุมสภาเกษตรกรแห่งชาติ</h1>
+      <p>ข้อมูล ณ เดือนมีนาคม 2569 · ปีงบประมาณ 2568–2569</p>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;flex-shrink:0">
+      <a href="https://script.google.com/macros/s/AKfycbyQ7VFKck4lGhQM4JrciWxYbC4jAwLoQ_2X-vGnQm5CPLrVg-tUv3-oQg91wNe2zA9p/exec" target="_blank" style="text-decoration:none">
+        <button style="
+          display:flex;align-items:center;gap:8px;
+          background:var(--gold);
+          color:var(--green-dark);
+          border:none;border-radius:10px;
+          padding:10px 18px;
+          font-family:'Sarabun',sans-serif;
+          font-size:14px;font-weight:700;
+          cursor:pointer;
+          box-shadow:0 2px 10px rgba(0,0,0,0.18);
+          transition:all 0.2s;
+          white-space:nowrap;
+        " onmouseover="this.style.background='#f5d06a';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='var(--gold)';this.style.transform='translateY(0)'">
+          🔍 ค้นหามติที่ประชุม
+        </button>
+      </a>
+      <div class="header-badge">
+        <strong id="hdr-total">59</strong>
+        มติทั้งหมด
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <div class="filter-group">
+      <label>ครั้งที่ประชุม</label>
+      <select id="f-session">
+        <option value="">ทั้งหมด</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>สถานะ</label>
+      <select id="f-status">
+        <option value="">ทั้งหมด</option>
+        <option value="อยู่ระหว่างดำเนินการ">อยู่ระหว่างดำเนินการ</option>
+        <option value="แล้วเสร็จ">แล้วเสร็จ</option>
+        <option value="อื่นๆ">อื่นๆ</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>ประเภทเจ้าของเรื่อง</label>
+      <select id="f-owner">
+        <option value="">ทั้งหมด</option>
+        <option value="สำนักงาน/หน่วยงาน">สำนักงาน/หน่วยงาน</option>
+        <option value="สภาเกษตรกรจังหวัด">สภาเกษตรกรจังหวัด</option>
+        <option value="คณะกรรมการ">คณะกรรมการ</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>ค้นหาเรื่อง</label>
+      <input type="text" id="f-search" placeholder="พิมพ์คำค้นหา...">
+    </div>
+    <button class="filter-reset" onclick="resetFilters()">↺ รีเซ็ต</button>
+    <div class="filter-count">แสดง <strong id="fc-count">59</strong> มติ</div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon total">📋</div>
+      <div class="kpi-info">
+        <div class="kpi-label">มติทั้งหมด</div>
+        <div class="kpi-value total" id="kpi-total">59</div>
+        <div class="kpi-sub">จาก <span id="kpi-sessions">9</span> ครั้งประชุม</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon pending">⏳</div>
+      <div class="kpi-info">
+        <div class="kpi-label">อยู่ระหว่างดำเนินการ</div>
+        <div class="kpi-value pending" id="kpi-pending">28</div>
+        <div class="kpi-sub">คิดเป็น <span id="kpi-pending-pct">47%</span></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon done">✅</div>
+      <div class="kpi-info">
+        <div class="kpi-label">ดำเนินการแล้วเสร็จ</div>
+        <div class="kpi-value done" id="kpi-done">28</div>
+        <div class="kpi-sub">คิดเป็น <span id="kpi-done-pct">47%</span></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon sessions">🗓️</div>
+      <div class="kpi-info">
+        <div class="kpi-label">ครั้งประชุม</div>
+        <div class="kpi-value sessions" id="kpi-sess-count">9</div>
+        <div class="kpi-sub">ปี 2568–2569</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title"><span>🥧</span> สัดส่วนสถานะ</div>
+      <div class="chart-wrap"><canvas id="chart-donut"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span>🏢</span> มติแยกตามประเภทเจ้าของเรื่อง</div>
+      <div class="chart-wrap"><canvas id="chart-owner"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span>📊</span> จำนวนมติแต่ละครั้งประชุม</div>
+      <div class="chart-wrap"><canvas id="chart-bar"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="timeline-card">
+    <div class="section-title"><span>🗓️</span> Timeline การประชุมและมติ</div>
+    <div class="timeline" id="timeline-wrap"></div>
+  </div>
+
+  <!-- PENDING -->
+  <div class="pending-card">
+    <div class="pending-header">
+      <div class="section-title" style="margin-bottom:0"><span>⚠️</span> รายการมติที่ค้างอยู่ระหว่างดำเนินการ</div>
+      <div class="pending-badge" id="pending-badge">28 เรื่อง</div>
+    </div>
+    <div class="pending-list" id="pending-list"></div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-card">
+    <div class="table-controls">
+      <div class="section-title" style="margin-bottom:0"><span>📋</span> ตารางมติทั้งหมด</div>
+      <div style="font-size:13px;color:var(--text-muted)">คลิกแถวเพื่อดูรายละเอียด</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>ครั้งที่</th>
+            <th>เรื่อง</th>
+            <th>เจ้าของเรื่อง</th>
+            <th>ประเภท</th>
+            <th>สถานะ</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div id="table-empty" class="table-empty" style="display:none">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-session" id="m-session"></div>
+        <div class="modal-topic" id="m-topic"></div>
+      </div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-label">เจ้าของเรื่อง</div>
+      <div class="modal-section-content" id="m-owner"></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-label">มติที่ประชุม</div>
+      <div class="modal-section-content" id="m-resolution"></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-label">สถานะปัจจุบัน</div>
+      <div class="modal-status" id="m-status-badge"></div>
+      <div class="modal-section-content" id="m-status-full" style="margin-top:8px"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = [{"session":"ครั้งที่ 1/2568","sessionDate":"2568-01-01","owner":"สภาเกษตรกรจังหวัดกระบี่","ownerType":"สภาเกษตรกรจังหวัด","topic":"การแก้ไขปัญหาโรคลำต้นเน่าในปาล์มน้ำมันที่เกิดจากเชื้อรากาโนเดอร์มา (Ganoderma)","resolution":"เห็นชอบมอบหมายให้คณะกรรมการศึกษา วิจัย และพัฒนาระบบเกษตรกร ศึกษา และจัดทำข้อเสนอเชิงนโยบายต่อไป","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างสํานักงานเลขาธิการคณะรัฐมนตรีแจ้งผลการพิจารณา (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 1/2568","sessionDate":"2568-01-01","owner":"ศูนย์ขับเคลื่อนนโยบายและบริหารกิจการพิเศษ","ownerType":"สำนักงาน/หน่วยงาน","topic":"แนวทางการช่วยเหลือเยียวยาเกษตรกร ภายหลังจากเกิดอุทกภัย","resolution":"เห็นชอบมอบหมายให้คณะกรรมการแก้ไขปัญหาของเกษตรกร ศึกษา และจัดทำข้อเสนอเชิงนโยบายต่อไป","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างสํานักงานเลขาธิการคณะรัฐมนตรีแจ้งผลการพิจารณา (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 1/2568","sessionDate":"2568-01-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"ขอความเห็นชอบหลักการ (ร่าง) ระเบียบสภาเกษตรกรแห่งชาติ ว่าด้วยการรับเงินหรือทรัพย์สินที่มีผู้ยกให้ การใช้จ่าย เงินรายได้ เงินช่วยเหลือและดอกผลหรือรายได้อื่นๆ พ.ศ. 2567","resolution":" 1. เห็นชอบหลักการ(ร่าง) ระเบียบสภาเกษตรกรแห่งชาติ ว่าด้วยการรับเงินหรือทรัพย์สินที่มีผู้ยกให้ การใช้จ่าย เงินรายได้ \nเงินช่วยเหลือและดอกผลหรือรายได้อื่นๆ พ.ศ. 2567\n2. มอบหมายให้สำนักงานสภาเกษตรกรแห่งชาติดำเนินการปรับปรุงร่างระเบียบดังกล่าวให้ครบถ้วน สมบูรณ์ รวมถึงดำเนินการในส่วนที่เกี่ยวข้อง และนำเสนอเพื่อขอความเห็นชอบจากกระทรวงการคลัง\n3. มอบหมายประธานสภาเกษตรกรแห่งชาติ ลงนามในระเบียบสภาเกษตรกรแห่งชาติ ว่าด้วยการรับเงินหรือทรัพย์สินที่มีผู้ยกให้ การใช้จ่าย เงินรายได้ เงินช่วยเหลือและดอกผลหรือรายได้อื่นๆ พ.ศ. 2567 ","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างการพิจารณา (ร่าง) ระเบียบสภาเกษตรกรแห่งชาติ ว่าด้วยการรับเงินหรือทรัพย์สินที่มีผู้ยกให้ การใช้จ่าย เงินรายได้ เงินช่วยเหลือและดอกผลหรือรายได้อื่นๆ พ.ศ. 2567 (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 1/2568","sessionDate":"2568-01-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"ขอความเห็นชอบหลักการ (ร่าง) ข้อบังคับ\nสภาเกษตรกรแห่งชาติ ว่าด้วยการบริหารงานบุคคล พ.ศ. 2567","resolution":"1. เห็นชอบในหลักการ (ร่าง) ข้อบังคับสภาเกษตรกรแห่งชาติ ว่าด้วยการบริหารงานบุคคล พ.ศ. 2567 มอบให้สำนักงาน\nสภาเกษตรกรแห่งชาติ พิจารณากลั่นกรองให้ถูกต้อง สมบูรณ์ เพื่อนำเสนอประธานสภาเกษตรกรแห่งชาติลงนาม\n2. มอบหมายให้ประธานสภาเกษตรกรแห่งชาติ ลงนามใน (ร่าง) ข้อบังคับสภาเกษตรกรแห่งชาติ ว่าด้วยการบริหารงานบุคคล พ.ศ. 2567 เพื่อบังคับใช้ต่อไป","status":"แล้วเสร็จ","statusFull":"ประกาศข้อบังคับสภาเกษตรกรแห่งชาติ ว่าด้วยการบริหารงานบุคคล พ.ศ. ๒๕๖๗ เรียบร้อยแล้ว (ประกาศ ณ วันที่ 23 ธันวาคม พ.ศ. 2567) (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 1/2568","sessionDate":"2568-01-01","owner":"สภาเกษตรกรจังหวัดตาก","ownerType":"สภาเกษตรกรจังหวัด","topic":"ข้อเสนอเพื่อป้องกันผลกระทบจากการดำเนินงานโครงการที่เกี่ยวเนื่องกับคาร์บอนเครดิต","resolution":"มอบหมายให้คณะกรรมการคุ้มครองและรักษาผลประโยชน์ของเกษตรกร ดำเนินการในส่วนที่เกี่ยวข้อง โดยนำข้อสังเกตของสมาชิกสภาเกษตรกรแห่งชาติไปประกอบการดำเนินการ","status":"อื่นๆ","statusFull":"ทำหนังสือไปที่องค์การบริหารจัดการก๊าซเรือนกระจก (องค์การมหาชน) และมีหนังสือไปที่สำนักกิจการสภา เพื่อประชาสัมพันธ์เกี่ยวกับโครงการการจัดทำคาร์บอนเครดิต (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 1/2568","sessionDate":"2568-01-01","owner":"สภาเกษตรกรจังหวัดแพร่","ownerType":"สภาเกษตรกรจังหวัด","topic":"ข้อเสนอการช่วยเหลือเกษตรกรผู้ปลูกข้าวโพดเลี้ยงสัตว์จังหวัดแพร่ ปี 2566/67","resolution":"มอบหมายให้คณะกรรมการแก้ไขปัญหาของเกษตรกร ดำเนินการในส่วนที่เกี่ยวข้อง โดยนำข้อสังเกตของสมาชิกสภาเกษตรกรแห่งชาติไปประกอบการดำเนินการ","status":"แล้วเสร็จ","statusFull":"กระทรวงพาณิชย์ดำเนินการจัดทำมาตรการรักษาเสถียรภาพราคาข้าวโพดเรียบร้อยแล้ว ก่อนสภาเกษตรกรจังหวัดจัดทำข้อเสนอ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 1/2568","sessionDate":"2568-01-01","owner":"สภาเกษตรกรจังหวัดเชียงใหม่","ownerType":"สภาเกษตรกรจังหวัด","topic":"ข้อเสนอเชิงนโยบายเพื่อแก้ไขปัญหาการรักษาเสถียรภาพราคาข้าวโพดเลี้ยงสัตว์จังหวัดเชียงใหม่","resolution":"มอบหมายให้คณะกรรมการแก้ไขปัญหาของเกษตรกร ดำเนินการในส่วนที่เกี่ยวข้อง โดยนำข้อสังเกตของสมาชิกสภาเกษตรกรแห่งชาติไปประกอบการดำเนินการ","status":"แล้วเสร็จ","statusFull":"กระทรวงพาณิชย์ดำเนินการจัดทำมาตรการรักษาเสถียรภาพราคาข้าวโพดเรียบร้อยแล้ว ก่อนสภาเกษตรกรจังหวัดจัดทำข้อเสนอ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 1/2568","sessionDate":"2568-01-01","owner":"สภาเกษตรกรจังหวัดพิจิตร","ownerType":"สภาเกษตรกรจังหวัด","topic":"ความเดือดร้อนเกี่ยวกับที่ดินทำกินของเกษตรกร (กรณี เขตป่าสงวนแห่งชาติทับซ้อนที่ดินทำกินของเกษตรกร เขตพื้นที่ 3 ตำบลสากเหล็ก","resolution":"มอบหมายให้สำนักงานสภาเกษตรกรแห่งชาติดำเนินการตามที่สภาเกษตรกรจังหวัดพิจิตรนำเสนอ","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 2/2568","sessionDate":"2568-02-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"ขอความเห็นชอบหลักการ (ร่าง) ประกาศสภาเกษตรกรแห่งชาติเรื่อง หลักเกณฑ์ วิธีการและเงื่อนไขการขอพระราชทานเครื่องราชอิสริยาภรณ์ให้แก่สมาชิกสภาเกษตรกรแห่งชาติ และสมาชิกสภาเกษตรกรจังหวัด","resolution":"ให้ความเห็นชอบ\n 1. หลักการ (ร่าง) ประกาศสภาเกษตรกรแห่งชาติ เรื่อง หลักเกณฑ์ วิธีการและเงื่อนไขการขอพระราชทานเครื่องราชอิสริยาภรณ์ให้แก่สมาชิกสภาเกษตรกรแห่งชาติและสมาชิกสภาเกษตรกรจังหวัด\n 2. มอบหมายให้ประธานสภาเกษตรกรแห่งชาติ ลงนามใน (ร่าง) ประกาศสภาเกษตรกรแห่งชาติ เรื่อง หลักเกณฑ์ วิธีการและเงื่อนไขการขอพระราชทานเครื่องราชอิสริยาภรณ์ให้แก่สมาชิกสภาเกษตรกรแห่งชาติและสมาชิกสภาเกษตรกรจังหวัด ต่อไป","status":"แล้วเสร็จ","statusFull":"ดำเนินการส่งข้อมูลไปยังสำนักเลขาธิการคณะรัฐมนตรีเรียบร้อยแล้ว เมื่อวันที่ 28 มกราคม 2569 (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 2/2568","sessionDate":"2568-02-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"ขอความเห็นชอบหลักการ (ร่าง) ระเบียบสภาเกษตรกรแห่งชาติ ว่าด้วยเงินประจำตำแหน่ง พ.ศ. 2567","resolution":"ให้ความเห็นชอบ\n 1. หลักการ (ร่าง) ระเบียบสภาเกษตรกรแห่งชาติ ว่าด้วยเงินประจำตำแหน่ง พ.ศ. 2567\n 2. มอบหมายให้ประธานสภาเกษตรกรแห่งชาติ ลงนามใน (ร่าง) ระเบียบสภาเกษตรกรแห่งชาติ ว่าด้วยเงินประจำตำแหน่ง พ.ศ. 2567 ต่อไป","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ ประกาศ ณ วันที่ 26 ธันวาคม 2567 (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 2/2568","sessionDate":"2568-02-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"ขอความเห็นชอบหลักการ (ร่าง) ระเบียบสภาเกษตรกรแห่งชาติ ว่าด้วยเงินเพิ่มสำหรับตำแหน่งที่มีเหตุพิเศษ พ.ศ. 2567 ตำแหน่งด้านพัสดุ ตำแหน่งด้านการเงินและบัญชี และตำแหน่งด้านการตรวจสอบภายใน พ.ศ. 2567","resolution":"ให้ความเห็นชอบ\n 1. เห็นชอบหลักการ (ร่าง) ระเบียบสภาเกษตรกรแห่งชาติ ว่าด้วยเงินเพิ่มสำหรับตำแหน่งที่มีเหตุพิเศษ\n 2. มอบหมายให้ประธานสภาเกษตรกรแห่งชาติ ลงนามใน (ร่าง) ระเบียบ ต่อไป","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ ประกาศ ณ วันที่ 26 ธันวาคม 2567 (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 2/2568","sessionDate":"2568-02-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"คำของบประมาณรายจ่ายประจำปีงบประมาณ พ.ศ. 2569","resolution":"ให้ความเห็นชอบกรอบการจัดทำคำของบประมาณรายจ่ายประจำปีงบประมาณ พ.ศ. 2569","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 2/2568","sessionDate":"2568-02-01","owner":"สภาเกษตรกรจังหวัดราชบุรี","ownerType":"สภาเกษตรกรจังหวัด","topic":"แนวทางการแก้ปัญหานมไทยภายใต้ความตกลง FTA","resolution":"ให้ความเห็นชอบ\n 1. ให้ความเห็นชอบข้อเสนอของสภาเกษตรกรจังหวัดราชบุรี\n 2. มอบให้ประธานสภาเกษตรกรแห่งชาติลงนามถึงเลขาธิการคณะรัฐมนตรีเพื่อนำเสนอต่อคณะรัฐมนตรี","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการนำเสนอคณะรัฐมนตรีชุดใหม่ ที่จะมีการแต่งตั้ง ประกอบกับมีการปรับปรุงเนื้อหาใหม่ให้เป็นปัจจุบัน (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 3/2568","sessionDate":"2568-03-01","owner":"สำนักกฎหมายและคุ้มครองสิทธิเกษตรกร","ownerType":"สำนักงาน/หน่วยงาน","topic":"ให้ความเห็นชอบ (ร่าง) แนวทางปฏิบัติงาน เรื่อง การเสนอระเบียบวาระการประชุมสภาเกษตรกรแห่งชาติ","resolution":"ให้ความเห็นชอบ\n 1. ให้ความเห็นชอบ (ร่าง) แนวทางปฏิบัติงาน\n 2. เห็นชอบมอบหมายให้ประธานฯ ลงนาม","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 3/2568","sessionDate":"2568-03-01","owner":"สำนักกิจการสภา","ownerType":"สำนักงาน/หน่วยงาน","topic":"การทดสอบระบบก่อนเปิดใช้งาน LINE Official Account สภาเกษตรกรแห่งชาติ","resolution":"ให้ความเห็นชอบ\n 1. คู่มือบริหารจัดการ LINE Official Account\n 2. อนุญาตให้สมาชิกเข้าร่วมทดสอบระบบ","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างจัดจ้างบริษัทในการจัดทำระบบ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 3/2568","sessionDate":"2568-03-01","owner":"คณะทำงานด้านการประเมินคุณธรรมและความโปร่งใส","ownerType":"คณะกรรมการ","topic":"ให้ความเห็นชอบ (ร่าง) ประกาศสภาเกษตรกรแห่งชาติ เรื่อง ประมวลจริยธรรมสำหรับเจ้าหน้าที่ของรัฐ","resolution":"ให้ความเห็นชอบ ปรับปรุงและลงนามในประกาศ","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 3/2568","sessionDate":"2568-03-01","owner":"นายสิงห์ชัย เรืองขจร ประธานคณะกรรมการแก้ไขปัญหาของเกษตรกร","ownerType":"คณะกรรมการ","topic":"พิจารณาแนวทางแก้ไขปัญหาราคามันสำปะหลังตกต่ำ","resolution":"มอบหมายให้คณะกรรมการแก้ไขปัญหาฯ รวบรวมข้อมูลจัดทำข้อเสนอเชิงนโยบายเสนอต่อคณะรัฐมนตรี","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ เนื่องจาก 1) มีการปรับปรุงรูปแบบหนังสือราชการ และ 2) รอคณะรัฐมนตรีชุดใหม่เข้ารับตำแหน่ง (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 3/2568","sessionDate":"2568-03-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"ขอความเห็นชอบมอบอำนาจให้ประธานสภาเกษตรกรแห่งชาติ มีอำนาจในกรณีที่มีความสำคัญและมีความจำเป็นเร่งด่วน","resolution":"ให้ความเห็นชอบ มอบอำนาจให้ประธานสภาเกษตรกรแห่งชาติดำเนินการ","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 3/2568","sessionDate":"2568-03-01","owner":"สมาชิกสภาเกษตรกรจากจังหวัดตราด จันทบุรี ระยอง ชุมพร","ownerType":"สภาเกษตรกรจังหวัด","topic":"ข้อเสนอการแก้ไขปัญหาสารปนเปื้อนตกค้างในทุเรียนส่งออก","resolution":"เห็นชอบให้ตั้งคณะทำงานเพื่อศึกษาข้อเสนอมาตรการป้องกันการปนเปื้อนในทุเรียน","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 3/2568","sessionDate":"2568-03-01","owner":"สมาชิกสภาเกษตรกรจากจังหวัดปราจีนบุรี หนองบัวลำภู อ่างทอง","ownerType":"สภาเกษตรกรจังหวัด","topic":"แนวทางการให้ความช่วยเหลือเกษตรกรผู้ปลูกข้าวที่ได้รับผลกระทบจากราคาข้าวตกต่ำ และมาตรการห้ามเผาฟาง","resolution":"เห็นชอบมอบหมายให้ตั้งคณะทำงานเพื่อศึกษาแนวทางช่วยเหลือเกษตรกร","status":"แล้วเสร็จ","statusFull":"คณะรัฐมนตรีได้มีมติออกมาเรียบร้อยแล้ว (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 4/2568","sessionDate":"2568-04-01","owner":"คณะกรรมการแก้ไขปัญหาของเกษตรกร","ownerType":"คณะกรรมการ","topic":"(ร่าง) ข้อเสนอแก้ปัญหาราคามันสำปะหลังตกต่ำ","resolution":"ให้ความเห็นชอบ (ร่าง) ข้อเสนอและมอบหมายให้นำความเห็นไปปรับปรุง","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ เนื่องจากรอคณะรัฐมนตรีชุดใหม่เข้ารับตำแหน่ง (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 4/2568","sessionDate":"2568-04-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"(ร่าง) ความเห็นต่อ FTA ระหว่างไทยและสมาคมการค้าเสรีแห่งยุโรป (EFTA) ที่จะส่งผลกระทบต่อเกษตรกรผู้เพาะเลี้ยงปลา","resolution":"ให้ความเห็นชอบและมอบหมายให้ปรับปรุงก่อนเสนอต่อคณะรัฐมนตรี","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ รอคณะรัฐมนตรีชุดใหม่ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 4/2568","sessionDate":"2568-04-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"(ร่าง) ข้อเสนอและเหตุผลเพื่อแก้ไขเพิ่มเติมพระราชบัญญัติส่งเสริมและพัฒนาระบบเกษตรพันธสัญญา พ.ศ. 2560","resolution":"ให้ความเห็นชอบร่าง พ.ร.บ. และมอบหมายให้ปรับปรุงก่อนเสนอต่อ ครม.","status":"อื่นๆ","statusFull":"เสนอ เลขาธิการคณะรัฐมนตรี ตามหนังสือที่ สภช.0101/8 ลงวันที่ 23 มกราคม 2569 (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 4/2568","sessionDate":"2568-04-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"(ร่าง) ข้อเสนอเชิงนโยบายการเสริมสร้างขีดความสามารถในการแข่งขันของอุตสาหกรรมโคนมไทยภายใต้ข้อตกลง TAFTA และ TNZCEP","resolution":"ให้ความเห็นชอบข้อเสนอเชิงนโยบายและมอบหมายให้ปรับปรุงก่อนเสนอ ครม.","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการนำเสนอคณะรัฐมนตรีชุดใหม่ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 4/2568","sessionDate":"2568-04-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"ขอความเห็นชอบ (ร่าง) ประกาศสภาเกษตรกรแห่งชาติ เรื่อง การเบิกจ่ายเงินค่าเดินทาง กรณีการประชุมทางไกลผ่าน Zoom","resolution":"ให้ความเห็นชอบและมอบหมายให้ประธานลงนาม","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 4/2568","sessionDate":"2568-04-01","owner":"สภาเกษตรกรจังหวัดสุโขทัย","ownerType":"สภาเกษตรกรจังหวัด","topic":"การกำหนดแนวทางในการปฏิบัติหน้าที่ของสมาชิกสภาเกษตรกรจังหวัดในกรณีจำเป็นเร่งด่วน","resolution":"มอบหมายให้สำนักงานจัดทำร่างแนวปฏิบัติ","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 5/2568","sessionDate":"2568-04-02","owner":"คณะกรรมการกิจการสภาเกษตรกรแห่งชาติ","ownerType":"คณะกรรมการ","topic":"(ร่าง) แผนยุทธศาสตร์พัฒนาสภาเกษตรกรแห่งชาติ พ.ศ. 2568 – 2573","resolution":"ให้ความเห็นชอบ (ร่าง) แผนยุทธศาสตร์","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"คณะกรรมการศึกษา วิจัย และพัฒนาระบบเกษตรกรรม","ownerType":"คณะกรรมการ","topic":"(ร่าง) ข้อเสนอเชิงนโยบาย เพื่อช่วยเหลือเกษตรกรผู้ปลูกสับปะรดที่ได้รับผลกระทบจากการแพร่ระบาดของโรคเหี่ยวในสับปะรด","resolution":"เห็นชอบและมอบหมายให้เสนอต่อ ครม.","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ รอคณะรัฐมนตรีชุดใหม่เข้ารับตำแหน่ง (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"คณะกรรมการศึกษา วิจัย และพัฒนาระบบเกษตรกรรม","ownerType":"คณะกรรมการ","topic":"(ร่าง) ข้อเสนอแนวทางการแก้ไขปัญหาเกษตรกรผู้ปลูกปาล์มน้ำมัน โรคลำต้นเน่าจากเชื้อราการ์โนเดอร์มา","resolution":"เห็นชอบและมอบหมายให้เสนอต่อ ครม.","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างสํานักงานเลขาธิการคณะรัฐมนตรีแจ้งผลการพิจารณา (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"คณะกรรมการส่งเสริมและพัฒนาความเข้มแข็งของเกษตรกรฯ","ownerType":"คณะกรรมการ","topic":"(ร่าง) ขอทบทวนการบังคับใช้พระราชกฤษฎีกาว่าด้วยการกำหนดค่าใช้จ่ายที่ยอมให้หักจากเงินได้พึงประเมิน (ฉบับที่ 629) พ.ศ. 2560","resolution":"เห็นชอบและมอบหมายให้เสนอต่อ ครม.","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างการปรับปรุงเนื้อหาของข้อเสนอ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"คณะกรรมการส่งเสริมและพัฒนาความเข้มแข็งของเกษตรกรฯ","ownerType":"คณะกรรมการ","topic":"การให้ข้อเสนอแนะเพิ่มเติมเพื่อปรับปรุง (ร่าง) พระราชบัญญัติส่งเสริมและพัฒนาระบบเกษตรยั่งยืน พ.ศ....","resolution":"เห็นชอบข้อเสนอแนะและมอบหมายให้เสนอต่อนายกรัฐมนตรี","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ จัดทำผลกระทบที่จะเกิดขึ้นจาก ร่าง พ.ร.บ. และเตรียมจัดทำกฎหมายลำดับรอง (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"โครงการเฉลิมพระเกียรติพระบาทสมเด็จพระวชิรเกล้าเจ้าอยู่หัว เนื่องในโอกาสมหามงคลเฉลิมพระชนมพรรษา 73 พรรษา","resolution":"เห็นชอบในหลักการโครงการและมอบหมายสำนักงานดำเนินการ","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ ส่งมอบข้าวให้โรงเรียนวัดสระแก้ว 11 ตัน (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"คณะกรรมการกิจการสภาเกษตรกรแห่งชาติ","ownerType":"คณะกรรมการ","topic":"การแต่งตั้งคณะอนุกรรมการจัดสรรงบประมาณ พ.ศ. 2569 และจัดทำคำของบประมาณ พ.ศ. 2570","resolution":"เห็นชอบให้แต่งตั้งคณะอนุกรรมการ","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"ประธานสภาเกษตรกรจังหวัดลพบุรี","ownerType":"สภาเกษตรกรจังหวัด","topic":"การปรับปรุงแก้ไขเพิ่มเติมข้อบังคับสภาเกษตรกรแห่งชาติ ว่าด้วยข้อบังคับการประชุมสภาเกษตรกรจังหวัด พ.ศ. 2555","resolution":"เห็นชอบให้ปรับปรุงข้อบังคับการประชุม","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"ประธานสภาเกษตรกรจังหวัดลพบุรี","ownerType":"สภาเกษตรกรจังหวัด","topic":"การปรับปรุงอัตราค่าใช้จ่ายในการเดินทางไปปฏิบัติงาน โดยยานพาหนะส่วนตัว","resolution":"เห็นชอบปรับอัตราค่าเดินทาง 7 บาท","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"การปรับอัตราเงินเดือนขั้นต่ำ – ขั้นสูง ของพนักงานสำนักงานสภาเกษตรกรแห่งชาติ","resolution":"ให้ความเห็นชอบการปรับอัตราเงินเดือน","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"การขอตั้งงบประมาณเพิ่มเติมระหว่างปี ปีงบประมาณ พ.ศ. 2568","resolution":"ให้ความเห็นชอบการขอตั้งงบประมาณเพิ่มเติม 688,651.98 บาท","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"ประธานสภาเกษตรกรจังหวัดชุมพร","ownerType":"สภาเกษตรกรจังหวัด","topic":"ข้อเสนอการแก้ไข ร่างพระราชบัญญัติปาล์มน้ำมันและผลิตภัณฑ์จากปาล์มน้ำมัน พ.ศ. ...","resolution":"ให้ความเห็นชอบและมอบสำนักงานดำเนินการ","status":"แล้วเสร็จ","statusFull":"ดำเนินการส่งข้อเสนอไปยังสำนักงานเศรษฐกิจการเกษตรเรียบร้อยแล้ว (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"ประธานสภาเกษตรกรจังหวัดตรัง","ownerType":"สภาเกษตรกรจังหวัด","topic":"ข้อเสนอเพื่อการพัฒนาอุตสาหกรรมปาล์มน้ำมันจังหวัดตรัง","resolution":"ให้ความเห็นชอบข้อเสนอ","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างติดตามข้อมูลเพิ่มเติมจากสำนักงานสภาเกษตรกรจังหวัดตรัง (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"ประธานสภาเกษตรกรจังหวัดเชียงใหม่","ownerType":"สภาเกษตรกรจังหวัด","topic":"ข้อเสนอเชิงนโยบายแนวทางในการปฏิรูประบบการผลิตและตลาดโคเนื้อของไทย Thai Beef Model","resolution":"ให้ความเห็นชอบข้อเสนอการปฏิรูปโคเนื้อ THAI BEEF MODEL","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ รอคณะรัฐมนตรีชุดใหม่เข้ารับตำแหน่ง (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"ประธานสภาเกษตรกรจังหวัดร้อยเอ็ด","ownerType":"สภาเกษตรกรจังหวัด","topic":"ข้อเสนอเชิงนโยบาย การแก้ไขปัญหาการจัดการทรัพยากรน้ำระดับชุมชน (ภาคอีสาน 20 จังหวัด)","resolution":"ให้ความเห็นชอบข้อเสนอและมอบสำนักงานดำเนินการ","status":"แล้วเสร็จ","statusFull":"ดำเนินการส่งข้อเสนอไปยังคณะรัฐมนตรีเรียบร้อยแล้ว และมีมติออกมาเมื่อวันที่ 28 ตุลาคม 2568 (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 6/2568","sessionDate":"2568-05-01","owner":"คณะกรรมการส่งเสริมและพัฒนาความเข้มแข็งของเกษตรกรฯ","ownerType":"คณะกรรมการ","topic":"การรับฟังความคิดเห็นการจัดทำดัชนีตัวชี้วัดความเข้มแข็งของเกษตรกรและองค์กรเกษตรกร","resolution":"มอบหมายให้คณะกรรมการรับข้อสังเกตไปดำเนินการ","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ เนื่องจากไม่มีงบประมาณในการจัดประชุม (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 7/2568","sessionDate":"2568-06-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"ขอความเห็นชอบรายงานผลการติดตามข้อเสนอแนวทางการแก้ไขปัญหาเกษตรกรผู้เลี้ยงสัตว์ปีก (ไก่งวง)","resolution":"ให้ความเห็นชอบรายงานและเสนอต่อ ครม.","status":"แล้วเสร็จ","statusFull":"เสนอคณะรัฐมนตรีพิจารณาเรียบร้อยแล้ว (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 7/2568","sessionDate":"2568-06-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"(ร่าง) ข้อเสนอเชิงนโยบาย แนวทางการปรับหลักเกณฑ์ในการใช้จ่ายเงินทดรองราชการเพื่อช่วยเหลือผู้ประสบภัยพิบัติภาคการเกษตร","resolution":"ให้ความเห็นชอบในหลักการและมอบหมายให้ปรับปรุง","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างสํานักงานเลขาธิการคณะรัฐมนตรีแจ้งผลการพิจารณา (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 7/2568","sessionDate":"2568-06-01","owner":"ประธานสภาเกษตรกรจังหวัดสระแก้ว","ownerType":"สภาเกษตรกรจังหวัด","topic":"แนวทางการแก้ไขปัญหาผลกระทบจากการดำเนินโครงการโคบาลบูรพาจังหวัดสระแก้ว","resolution":"ให้ความเห็นชอบและเสนอต่อ ครม.","status":"อื่นๆ","statusFull":"ครม. มีมติเมื่อวันที่ 28 ตุลาคม 2568 รับทราบและมอบหมายกระทรวงเกษตรฯ พิจารณา (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 7/2568","sessionDate":"2568-06-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"(ร่าง) ข้อเสนอเชิงนโยบาย การแก้ไขปัญหาประมงพื้นบ้าน กรณีจังหวัดที่ติดชายฝั่งทะเล","resolution":"ให้ความเห็นชอบในหลักการและมอบหมายให้ดำเนินการ","status":"แล้วเสร็จ","statusFull":"คณะรัฐมนตรีได้มีมติออกมาเรียบร้อยแล้ว (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 7/2568","sessionDate":"2568-06-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"(ร่าง) ข้อเสนอเชิงนโยบาย แนวทางการแก้ไขปัญหาน้ำเค็มรุกล้ำพื้นที่การเกษตร (ลุ่มน้ำแม่กลอง)","resolution":"ให้ความเห็นชอบในหลักการและมอบหมายให้ปรับปรุงและเสนอ ครม.","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างเก็บรวบรวมข้อมูลเพิ่มเติม ขณะนี้มีข้อมูลเพียง 2 จังหวัด (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 7/2568","sessionDate":"2568-06-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"ขอความเห็นชอบกรอบการจัดสรรงบประมาณรายจ่ายประจำปีงบประมาณ พ.ศ. 2569","resolution":"มีมติเห็นชอบกรอบงบประมาณ 412,837,900 บาท","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 7/2568","sessionDate":"2568-06-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"ขอความเห็นชอบการกันเงินงบประมาณไว้เบิกเหลื่อมปี ปี 2568 ของสำนักงานสภาเกษตรกรแห่งชาติและสำนักงานสภาเกษตรกรจังหวัด 77 จังหวัด","resolution":"ให้ความเห็นชอบการกันเงิน","status":"แล้วเสร็จ","statusFull":"ดำเนินการแล้วเสร็จ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 7/2568","sessionDate":"2568-06-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"(ร่าง) โครงการ ปลูกข้าวเฉลิมพระเกียรติพระบาทสมเด็จพระเจ้าอยู่หัว เนื่องในโอกาสมหามงคลเฉลิมพระชนมพรรษา 74 พรรษา 28 กรกฎาคม 2569","resolution":"ให้ความเห็นชอบโครงการและอนุมัติงบ 10 จังหวัด","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการเตรียมงานเกี่ยวข้าวที่จังหวัดนครนายก (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 7/2568","sessionDate":"2568-06-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"ขอเลื่อนการบังคับใช้ระเบียบสภาเกษตรกรแห่งชาติ ว่าด้วยสวัสดิการและสิทธิประโยชน์อย่างอื่น พ.ศ. 2567","resolution":"เห็นชอบให้เลื่อนบังคับใช้ออกไป 1 ปี เป็นวันที่ 1 ตุลาคม 2569","status":"อื่นๆ","statusFull":"มีการขอเลื่อนการบังคับใช้ระเบียบออกไป 1 ปี โดยกำหนดใช้ในปีงบประมาณ พ.ศ. 2570"},{"session":"ครั้งที่ 1/2569","sessionDate":"2569-01-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"กรอบคำของบประมาณประจำปี พ.ศ. 2570","resolution":"ให้ความเห็นชอบกรอบงบประมาณ พ.ศ. 2570","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 1/2569","sessionDate":"2569-01-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"การดำเนินงานของสำนักงานสภาเกษตรกรแห่งชาติ ภายใต้ประเด็นยุทธศาสตร์ที่ 2 การพัฒนารายได้","resolution":"ให้ความเห็นชอบให้สำนักงานดำเนินการในส่วนที่เกี่ยวข้อง","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 1/2569","sessionDate":"2569-01-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"การกำหนดฐานในการคำนวณและช่วงเงินเดือนสำหรับการเลื่อนเงินเดือนในแต่ละประเภทและระดับตำแหน่ง","resolution":"ให้ความเห็นชอบและมอบหมายคณะกรรมการพนักงานดำเนินการ","status":"แล้วเสร็จ","statusFull":"จัดทำประกาศเรียบร้อยแล้ว (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 2/2569","sessionDate":"2569-02-01","owner":"สภาเกษตรกรจังหวัดจันทบุรี","ownerType":"สภาเกษตรกรจังหวัด","topic":"ผลักดันการก่อสร้างอ่างเก็บน้ำคลองวังโตนด","resolution":"เสนอให้ ครม. เร่งรัดคณะกรรมการสิ่งแวดล้อมแห่งชาติ ติดตามผล","status":"แล้วเสร็จ","statusFull":"ประธานสภาเกษตรกรแห่งชาติลงนามเรียบร้อยแล้ว (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 2/2569","sessionDate":"2569-02-01","owner":"สภาเกษตรกรจังหวัดศรีสะเกษ สุรินทร์ บุรีรัมย์ ตราด สระแก้ว อุบลราชธานี ระยอง จันทบุรี","ownerType":"สภาเกษตรกรจังหวัด","topic":"ข้อเสนอเชิงนโยบาย มาตรการบรรเทาผลกระทบกรณีสถานการณ์ชายแดนไทย - กัมพูชา","resolution":"อนุมัติในหลักการและมอบหมายให้จัดทำข้อเสนอเสนอ ครม.","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการ โดยให้จังหวัดทบทวนหัวข้อ (ร่าง) ข้อเสนอ ซึ่งจะมีประชุมครั้งที่ 2 ในวันที่ 21 เมษายน 2569 (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 2/2569","sessionDate":"2569-02-01","owner":"สำนักงานสภาเกษตรกรแห่งชาติ","ownerType":"สำนักงาน/หน่วยงาน","topic":"ข้อเสนอเชิงนโยบาย โครงการพัฒนาเกษตรกรสู่การเป็นผู้ประกอบการ SME เกษตรมืออาชีพ","resolution":"เห็นชอบโครงการและมอบหมายให้เสนอประธานลงนาม","status":"อยู่ระหว่างดำเนินการ","statusFull":"เสนอต่อเลขาธิการฯ ลงนามแล้ว รอประชุมคณะกรรมการพิจารณา คาดว่าประกาศผลภายในเดือนเมษายน 2569 (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 2/2569","sessionDate":"2569-02-01","owner":"สภาเกษตรกรจังหวัดตาก","ownerType":"สภาเกษตรกรจังหวัด","topic":"ข้อเสนอเชิงนโยบายเพื่อแยกการจัดชั้นลูกหนี้ออกจากการจัดชั้นสมาชิกของสหกรณ์การเกษตร","resolution":"เห็นชอบในหลักการและมอบหมายให้รวบรวมข้อมูลทุกประเภทสหกรณ์","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการรอเสนอกรมส่งเสริมสหกรณ์ กระทรวงเกษตรและสหกรณ์ (ข้อมูล ณ เดือน มีนาคม 2569)"},{"session":"ครั้งที่ 2/2569","sessionDate":"2569-02-01","owner":"สภาเกษตรกรจังหวัดปทุมธานี","ownerType":"สภาเกษตรกรจังหวัด","topic":"ข้อเสนอเชิงนโยบาย การศึกษาแก้ไขปัญหาราคาข้าวตกต่ำ ปรับเปลี่ยนสู่ความยั่งยืน","resolution":"เห็นชอบแนวทางการแก้ไขปัญหาราคาข้าวตกต่ำอย่างยั่งยืน","status":"อยู่ระหว่างดำเนินการ","statusFull":"อยู่ระหว่างดำเนินการเก็บรวบรวมข้อมูลเพิ่มเติม (ข้อมูล ณ เดือน มีนาคม 2569)"}];
+
+let filtered = [...DATA];
+let currentPage = 1;
+const PAGE_SIZE = 10;
+let charts = {};
+
+// Init filters
+function initFilters() {
+  const sessions = [...new Set(DATA.map(d => d.session))];
+  const sel = document.getElementById('f-session');
+  sessions.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    sel.appendChild(opt);
+  });
+}
+
+function applyFilters() {
+  const session = document.getElementById('f-session').value;
+  const status = document.getElementById('f-status').value;
+  const owner = document.getElementById('f-owner').value;
+  const search = document.getElementById('f-search').value.toLowerCase().trim();
+
+  filtered = DATA.filter(d => {
+    if (session && d.session !== session) return false;
+    if (status && d.status !== status) return false;
+    if (owner && d.ownerType !== owner) return false;
+    if (search && !d.topic.toLowerCase().includes(search) && !d.owner.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  currentPage = 1;
+  updateAll();
+}
+
+function resetFilters() {
+  document.getElementById('f-session').value = '';
+  document.getElementById('f-status').value = '';
+  document.getElementById('f-owner').value = '';
+  document.getElementById('f-search').value = '';
+  filtered = [...DATA];
+  currentPage = 1;
+  updateAll();
+}
+
+function updateAll() {
+  updateKPIs();
+  updateCharts();
+  updateTimeline();
+  updatePending();
+  updateTable();
+}
+
+function updateKPIs() {
+  const total = filtered.length;
+  const pending = filtered.filter(d => d.status === 'อยู่ระหว่างดำเนินการ').length;
+  const done = filtered.filter(d => d.status === 'แล้วเสร็จ').length;
+  const sessions = new Set(filtered.map(d => d.session)).size;
+
+  document.getElementById('kpi-total').textContent = total;
+  document.getElementById('kpi-sessions').textContent = sessions;
+  document.getElementById('kpi-pending').textContent = pending;
+  document.getElementById('kpi-done').textContent = done;
+  document.getElementById('kpi-pending-pct').textContent = total ? Math.round(pending/total*100)+'%' : '0%';
+  document.getElementById('kpi-done-pct').textContent = total ? Math.round(done/total*100)+'%' : '0%';
+  document.getElementById('kpi-sess-count').textContent = sessions;
+  document.getElementById('fc-count').textContent = total;
+  document.getElementById('hdr-total').textContent = total;
+}
+
+function updateCharts() {
+  // Donut
+  const pending = filtered.filter(d => d.status === 'อยู่ระหว่างดำเนินการ').length;
+  const done = filtered.filter(d => d.status === 'แล้วเสร็จ').length;
+  const other = filtered.filter(d => d.status === 'อื่นๆ').length;
+
+  if (charts.donut) charts.donut.destroy();
+  charts.donut = new Chart(document.getElementById('chart-donut'), {
+    type: 'doughnut',
+    data: {
+      labels: ['อยู่ระหว่างดำเนินการ', 'แล้วเสร็จ', 'อื่นๆ'],
+      datasets: [{
+        data: [pending, done, other],
+        backgroundColor: ['#f4a261', '#52b788', '#90caf9'],
+        borderWidth: 3,
+        borderColor: '#ffffff',
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Sarabun', size: 12 }, padding: 12, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} เรื่อง` } }
+      }
+    }
+  });
+
+  // Owner bar
+  const ownerCounts = {};
+  filtered.forEach(d => ownerCounts[d.ownerType] = (ownerCounts[d.ownerType]||0)+1);
+  if (charts.owner) charts.owner.destroy();
+  charts.owner = new Chart(document.getElementById('chart-owner'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(ownerCounts),
+      datasets: [{
+        label: 'จำนวนมติ',
+        data: Object.values(ownerCounts),
+        backgroundColor: ['#2d6a4f','#52b788','#90caf9'],
+        borderRadius: 6, borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw} มติ` } } },
+      scales: {
+        x: { grid: { color: '#f0f5ee' }, ticks: { font: { family: 'Sarabun', size: 12 } } },
+        y: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 12 } } }
+      }
+    }
+  });
+
+  // Session bar
+  const sessionCounts = {};
+  filtered.forEach(d => sessionCounts[d.session] = (sessionCounts[d.session]||0)+1);
+  const sessKeys = Object.keys(sessionCounts);
+  if (charts.bar) charts.bar.destroy();
+  charts.bar = new Chart(document.getElementById('chart-bar'), {
+    type: 'bar',
+    data: {
+      labels: sessKeys,
+      datasets: [{
+        label: 'มติ',
+        data: sessKeys.map(k => sessionCounts[k]),
+        backgroundColor: sessKeys.map((_, i) => i % 2 === 0 ? '#2d6a4f' : '#52b788'),
+        borderRadius: 5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw} มติ` } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 11 }, maxRotation: 45 } },
+        y: { grid: { color: '#f0f5ee' }, ticks: { font: { family: 'Sarabun', size: 12 }, stepSize: 1 } }
+      }
+    }
+  });
+}
+
+function updateTimeline() {
+  const wrap = document.getElementById('timeline-wrap');
+  const sessionData = {};
+  filtered.forEach(d => {
+    if (!sessionData[d.session]) sessionData[d.session] = { pending: 0, done: 0, other: 0, total: 0 };
+    sessionData[d.session].total++;
+    if (d.status === 'อยู่ระหว่างดำเนินการ') sessionData[d.session].pending++;
+    else if (d.status === 'แล้วเสร็จ') sessionData[d.session].done++;
+    else sessionData[d.session].other++;
+  });
+
+  const maxTotal = Math.max(...Object.values(sessionData).map(s => s.total), 1);
+  const sessions = Object.entries(sessionData);
+
+  wrap.innerHTML = sessions.map(([session, stats]) => `
+    <div class="timeline-item">
+      <div class="timeline-dot">${stats.total}</div>
+      <div class="timeline-label">${session}</div>
+      <div class="timeline-bar-wrap">
+        <div class="timeline-bar">
+          <div class="timeline-bar-fill" style="width:${(stats.total/maxTotal)*100}%"></div>
+        </div>
+      </div>
+      <div class="timeline-stats">
+        <span class="timeline-stat tstat-pending">⏳${stats.pending}</span>
+        <span class="timeline-stat tstat-done">✅${stats.done}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updatePending() {
+  const items = filtered.filter(d => d.status === 'อยู่ระหว่างดำเนินการ');
+  document.getElementById('pending-badge').textContent = items.length + ' เรื่อง';
+  const list = document.getElementById('pending-list');
+  if (!items.length) {
+    list.innerHTML = '<div class="pending-empty">🎉 ไม่มีมติที่ค้างอยู่ในขณะนี้</div>';
+    return;
+  }
+  list.innerHTML = items.slice(0, 15).map((d, i) => `
+    <div class="pending-item" onclick="openModal(${DATA.indexOf(d)})">
+      <div class="pending-item-session">${d.session}</div>
+      <div>
+        <div class="pending-item-topic">${d.topic.substring(0, 100)}${d.topic.length > 100 ? '...' : ''}</div>
+        <div class="pending-item-status">📌 ${d.statusFull.substring(0, 90)}${d.statusFull.length > 90 ? '...' : ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateTable() {
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page = filtered.slice(start, start + PAGE_SIZE);
+  const tbody = document.getElementById('table-body');
+  const empty = document.getElementById('table-empty');
+
+  if (!filtered.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const ownerBadge = t => {
+    if (t === 'สภาเกษตรกรจังหวัด') return 'badge-owner-province';
+    if (t === 'คณะกรรมการ') return 'badge-owner-committee';
+    return 'badge-owner-office';
+  };
+  const statusBadge = s => {
+    if (s === 'อยู่ระหว่างดำเนินการ') return 'badge-pending';
+    if (s === 'แล้วเสร็จ') return 'badge-done';
+    return 'badge-other';
+  };
+  const statusLabel = s => {
+    if (s === 'อยู่ระหว่างดำเนินการ') return '⏳ อยู่ระหว่างดำเนินการ';
+    if (s === 'แล้วเสร็จ') return '✅ แล้วเสร็จ';
+    return '📋 อื่นๆ';
+  };
+
+  tbody.innerHTML = page.map((d, idx) => `
+    <tr onclick="openModal(${DATA.indexOf(d)})">
+      <td style="color:var(--text-muted);font-size:12px">${start + idx + 1}</td>
+      <td class="session-col">${d.session}</td>
+      <td class="topic-col">${d.topic.substring(0, 80)}${d.topic.length > 80 ? '...' : ''}</td>
+      <td class="owner-col">${d.owner.substring(0, 40)}${d.owner.length > 40 ? '...' : ''}</td>
+      <td><span class="badge ${ownerBadge(d.ownerType)}">${d.ownerType}</span></td>
+      <td class="status-col"><span class="badge ${statusBadge(d.status)}">${statusLabel(d.status)}</span></td>
+    </tr>
+  `).join('');
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const pag = document.getElementById('pagination');
+  if (totalPages <= 1) { pag.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+      html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    } else if (Math.abs(i - currentPage) === 2) {
+      html += `<span style="color:var(--text-muted);padding:0 4px;align-self:center">…</span>`;
+    }
+  }
+  html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+  pag.innerHTML = html;
+}
+
+function goPage(p) {
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  if (p < 1 || p > totalPages) return;
+  currentPage = p;
+  updateTable();
+}
+
+function openModal(idx) {
+  const d = DATA[idx];
+  document.getElementById('m-session').textContent = d.session;
+  document.getElementById('m-topic').textContent = d.topic;
+  document.getElementById('m-owner').textContent = d.owner;
+  document.getElementById('m-resolution').textContent = d.resolution;
+  
+  const statusEl = document.getElementById('m-status-badge');
+  if (d.status === 'อยู่ระหว่างดำเนินการ') {
+    statusEl.className = 'modal-status pending';
+    statusEl.textContent = '⏳ อยู่ระหว่างดำเนินการ';
+  } else if (d.status === 'แล้วเสร็จ') {
+    statusEl.className = 'modal-status done';
+    statusEl.textContent = '✅ ดำเนินการแล้วเสร็จ';
+  } else {
+    statusEl.className = 'modal-status other';
+    statusEl.textContent = '📋 อื่นๆ';
+  }
+  document.getElementById('m-status-full').textContent = d.statusFull;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// Event listeners
+['f-session','f-status','f-owner'].forEach(id => {
+  document.getElementById(id).addEventListener('change', applyFilters);
+});
+let searchTimer;
+document.getElementById('f-search').addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(applyFilters, 250);
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModalDirect(); });
+
+initFilters();
+updateAll();
+</script>
+</body>
+</html>
