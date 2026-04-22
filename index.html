@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Dashboard มติที่ประชุมสภาเกษตรกรแห่งชาติ</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -858,7 +861,11 @@
 // ข้อกำหนด: Sheet ต้องตั้งค่าเป็น "Anyone with the link can view" เพื่อให้ดึงข้อมูลได้
 const SHEET_ID = '18ZeaHCdLNWVxPeH5bATu2WZUDg2TUjpNOSv02-JTWE0';
 const SHEET_GID = '0';
-const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}&t=${Date.now()}`;
+// ใช้ฟังก์ชันสร้าง URL ใหม่ทุกครั้ง เพื่อให้ cache-buster (t) เป็นค่าล่าสุดเสมอ
+function buildGvizUrl() {
+  const bust = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}&cb=${bust}`;
+}
 
 let DATA = [];
 
@@ -879,7 +886,9 @@ function mapHeader(label) {
 async function loadData() {
   try {
     setLoading(true);
-    const response = await fetch(GVIZ_URL, { cache: 'no-store' });
+    const url = buildGvizUrl();
+    console.log('[Dashboard] Fetching data from:', url);
+    const response = await fetch(url, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
     const text = await response.text();
     // gviz ส่งคืนในรูป "google.visualization.Query.setResponse({...});" ต้องตัด prefix/suffix ออก
     const jsonStart = text.indexOf('{');
@@ -887,21 +896,41 @@ async function loadData() {
     if (jsonStart === -1 || jsonEnd === -1) throw new Error('Invalid gviz response');
     const json = JSON.parse(text.substring(jsonStart, jsonEnd + 1));
 
-    const cols = (json.table.cols || []).map(c => mapHeader(c.label || c.id));
+    const cols = (json.table.cols || []).map(c => ({
+      key: mapHeader(c.label || c.id),
+      type: c.type || 'string'
+    }));
     const rows = json.table.rows || [];
 
     DATA = rows.map(row => {
       const obj = { session: '', sessionDate: '', owner: '', ownerType: '',
                     topic: '', resolution: '', status: '', statusFull: '' };
       (row.c || []).forEach((cell, i) => {
-        const key = cols[i];
-        if (!key) return;
-        // ใช้ cell.v (raw value) ก่อน เพราะ cell.f (formatted) มักถูกตัดตามความกว้างคอลัมน์ใน Google Sheets
-        const val = cell ? (cell.v != null ? cell.v : (cell.f != null ? cell.f : '')) : '';
-        obj[key] = (val == null ? '' : String(val));
+        const col = cols[i];
+        if (!col || !col.key) return;
+        // สำหรับคอลัมน์ประเภท date/datetime/number/timeofday → ใช้ cell.f (formatted) ก่อน เพราะ cell.v จะคืน "Date(2568,0,1)" แบบดิบ
+        // สำหรับ string → ใช้ cell.v ก่อน เพื่อให้ได้ข้อความเต็มที่ไม่ถูกตัดตามความกว้างคอลัมน์
+        const isNonString = col.type === 'date' || col.type === 'datetime' || col.type === 'number' || col.type === 'timeofday';
+        let val;
+        if (!cell) {
+          val = '';
+        } else if (isNonString) {
+          val = (cell.f != null && cell.f !== '') ? cell.f : (cell.v != null ? cell.v : '');
+        } else {
+          val = (cell.v != null && cell.v !== '') ? cell.v : (cell.f != null ? cell.f : '');
+        }
+        obj[col.key] = (val == null ? '' : String(val));
       });
       return obj;
     }).filter(d => d.session && d.session.trim() !== ''); // ตัดแถวว่างออก
+
+    // Log รายการครั้งที่ประชุมทั้งหมดเพื่อให้ตรวจสอบได้ว่าดึงมาจาก Sheet อะไรบ้าง
+    const sessionList = [...new Set(DATA.map(d => d.session))];
+    console.log(`[Dashboard] Loaded ${DATA.length} rows from Google Sheets`);
+    console.log('[Dashboard] Sessions found:', sessionList);
+    if (sessionList.some(s => s && s.includes('7/2568'))) {
+      console.warn('[Dashboard] ⚠️ พบ "ครั้งที่ 7/2568" ในข้อมูลจาก Google Sheets — ถ้าไม่ต้องการให้แสดง กรุณาลบแถวเหล่านี้ใน Google Sheets โดยตรง');
+    }
 
     filtered = [...DATA];
     currentPage = 1;
