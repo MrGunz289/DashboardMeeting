@@ -618,19 +618,19 @@
   .page-btn.active { background: var(--green-mid); border-color: var(--green-mid); color: white; font-weight: 700; }
   .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  .progress-ring-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    height: 200px;
+  /* DIAGNOSTIC BANNER */
+  .diag-warn {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-left: 4px solid #ffc107;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: #795548;
+    margin-bottom: 16px;
+    display: none;
   }
-  .progress-ring-label {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-top: 8px;
-    text-align: center;
-  }
+  .diag-warn strong { color: #e65100; }
 
   @media (max-width: 900px) {
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
@@ -699,6 +699,9 @@
   <!-- DATA STATUS -->
   <div id="data-status" style="font-size:12px;color:var(--text-muted);text-align:right;margin-bottom:10px;font-style:italic">กำลังโหลดข้อมูลจาก Google Sheets…</div>
 
+  <!-- DIAGNOSTIC BANNER -->
+  <div class="diag-warn" id="diag-banner"></div>
+
   <!-- FILTERS -->
   <div class="filters">
     <div class="filter-group">
@@ -711,18 +714,12 @@
       <label>สถานะ</label>
       <select id="f-status">
         <option value="">ทั้งหมด</option>
-        <option value="อยู่ระหว่างดำเนินการ">อยู่ระหว่างดำเนินการ</option>
-        <option value="แล้วเสร็จ">แล้วเสร็จ</option>
-        <option value="อื่นๆ">อื่นๆ</option>
       </select>
     </div>
     <div class="filter-group">
       <label>ประเภทเจ้าของเรื่อง</label>
       <select id="f-owner">
         <option value="">ทั้งหมด</option>
-        <option value="สำนักงาน/หน่วยงาน">สำนักงาน/หน่วยงาน</option>
-        <option value="สภาเกษตรกรจังหวัด">สภาเกษตรกรจังหวัด</option>
-        <option value="คณะกรรมการ">คณะกรรมการ</option>
       </select>
     </div>
     <div class="filter-group">
@@ -730,7 +727,7 @@
       <input type="text" id="f-search" placeholder="พิมพ์คำค้นหา...">
     </div>
     <button class="filter-reset" onclick="resetFilters()">↺ รีเซ็ต</button>
-    <div class="filter-count">แสดง <strong id="fc-count">59</strong> มติ</div>
+    <div class="filter-count">แสดง <strong id="fc-count">…</strong> มติ</div>
   </div>
 
   <!-- KPI -->
@@ -739,31 +736,31 @@
       <div class="kpi-icon total">📋</div>
       <div class="kpi-info">
         <div class="kpi-label">มติทั้งหมด</div>
-        <div class="kpi-value total" id="kpi-total">59</div>
-        <div class="kpi-sub">จาก <span id="kpi-sessions">9</span> ครั้งประชุม</div>
+        <div class="kpi-value total" id="kpi-total">…</div>
+        <div class="kpi-sub">จาก <span id="kpi-sessions">…</span> ครั้งประชุม</div>
       </div>
     </div>
     <div class="kpi-card">
       <div class="kpi-icon pending">⏳</div>
       <div class="kpi-info">
         <div class="kpi-label">อยู่ระหว่างดำเนินการ</div>
-        <div class="kpi-value pending" id="kpi-pending">28</div>
-        <div class="kpi-sub">คิดเป็น <span id="kpi-pending-pct">47%</span></div>
+        <div class="kpi-value pending" id="kpi-pending">…</div>
+        <div class="kpi-sub">คิดเป็น <span id="kpi-pending-pct">…</span></div>
       </div>
     </div>
     <div class="kpi-card">
       <div class="kpi-icon done">✅</div>
       <div class="kpi-info">
         <div class="kpi-label">ดำเนินการแล้วเสร็จ</div>
-        <div class="kpi-value done" id="kpi-done">28</div>
-        <div class="kpi-sub">คิดเป็น <span id="kpi-done-pct">47%</span></div>
+        <div class="kpi-value done" id="kpi-done">…</div>
+        <div class="kpi-sub">คิดเป็น <span id="kpi-done-pct">…</span></div>
       </div>
     </div>
     <div class="kpi-card">
       <div class="kpi-icon sessions">🗓️</div>
       <div class="kpi-info">
         <div class="kpi-label">ครั้งประชุม</div>
-        <div class="kpi-value sessions" id="kpi-sess-count">9</div>
+        <div class="kpi-value sessions" id="kpi-sess-count">…</div>
         <div class="kpi-sub">ปี 2568–2569</div>
       </div>
     </div>
@@ -795,7 +792,7 @@
   <div class="pending-card">
     <div class="pending-header">
       <div class="section-title" style="margin-bottom:0"><span>⚠️</span> รายการมติที่ค้างอยู่ระหว่างดำเนินการ</div>
-      <div class="pending-badge" id="pending-badge">28 เรื่อง</div>
+      <div class="pending-badge" id="pending-badge">…</div>
     </div>
     <div class="pending-list" id="pending-list"></div>
   </div>
@@ -855,142 +852,339 @@
 
 <script>
 // ============================================================
-// CONFIG: Google Sheets data source
+// CONFIG
 // ============================================================
-// Sheet URL: https://docs.google.com/spreadsheets/d/18ZeaHCdLNWVxPeH5bATu2WZUDg2TUjpNOSv02-JTWE0/edit?gid=0
-// ข้อกำหนด: Sheet ต้องตั้งค่าเป็น "Anyone with the link can view" เพื่อให้ดึงข้อมูลได้
 const SHEET_ID = '18ZeaHCdLNWVxPeH5bATu2WZUDg2TUjpNOSv02-JTWE0';
 const SHEET_GID = '0';
-// ใช้ฟังก์ชันสร้าง URL ใหม่ทุกครั้ง เพื่อให้ cache-buster (t) เป็นค่าล่าสุดเสมอ
+
+// ค่าสถานะมาตรฐาน — ใช้ตัวแปรเพื่อความสม่ำเสมอ
+const STATUS_PENDING = 'อยู่ระหว่างดำเนินการ';
+const STATUS_DONE    = 'แล้วเสร็จ';
+const STATUS_OTHER   = 'อื่นๆ';
+
 function buildGvizUrl() {
   const bust = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}&cb=${bust}`;
 }
 
-let DATA = [];
+// ============================================================
+// normalizeStatus — รองรับการสะกดที่หลากหลายของสถานะ
+// ============================================================
+function normalizeStatus(raw) {
+  if (!raw) return '';
+  // ตัด whitespace รอบข้างและช่องว่างซ้ำกลางประโยค
+  const s = raw.replace(/\s+/g, ' ').trim();
+  if (!s) return '';
 
-// แมป header ของ Google Sheet ให้ตรงกับ key ที่ dashboard ใช้งาน
+  // กลุ่ม "อยู่ระหว่างดำเนินการ"
+  if (s.includes('ระหว่างดำเนิน') ||
+      s.includes('กำลังดำเนิน')   ||
+      s.includes('อยู่ระหว่าง')   ||
+      s === 'ดำเนินการ'            ||
+      s.includes('ยังไม่เสร็จ')   ||
+      s.includes('อยู่ในระหว่าง')) {
+    return STATUS_PENDING;
+  }
+
+  // กลุ่ม "แล้วเสร็จ"
+  if (s.includes('แล้วเสร็จ')         ||
+      s.includes('เสร็จสิ้น')          ||
+      s.includes('เสร็จแล้ว')          ||
+      s.includes('ดำเนินการเสร็จ')     ||
+      s.includes('เสร็จเรียบร้อย')     ||
+      s.includes('ดำเนินการแล้ว')      ||
+      s === 'เสร็จ') {
+    return STATUS_DONE;
+  }
+
+  // กลุ่ม "อื่นๆ"
+  if (s.includes('อื่นๆ') || s.includes('อื่น ๆ') || s === 'อื่น') {
+    return STATUS_OTHER;
+  }
+
+  // คืนค่าเดิม (ตัด whitespace แล้ว) ถ้าไม่ตรงกับกลุ่มใด
+  return s;
+}
+
+// ============================================================
+// mapHeader — แปลง header จาก Google Sheets เป็น key ที่ใช้ใน code
+// ============================================================
 function mapHeader(label) {
   const h = (label || '').toString().toLowerCase().trim();
-  if (h.includes('ครั้งที่') || h === 'session' || h.includes('การประชุม')) return 'session';
-  if (h.includes('sessiondate') || h.includes('วันที่') || h.includes('date')) return 'sessionDate';
-  if (h.includes('ownertype') || h.includes('ประเภท')) return 'ownerType';
-  if (h.includes('owner') || h.includes('เจ้าของ') || h.includes('หน่วยงาน')) return 'owner';
-  if (h.includes('topic') || h.includes('เรื่อง') || h.includes('หัวข้อ') || h.includes('ญัตติ')) return 'topic';
-  if (h.includes('resolution') || h.includes('มติ')) return 'resolution';
-  if (h.includes('statusfull') || h.includes('รายละเอียด') || h.includes('ผลการดำเนินการ')) return 'statusFull';
-  if (h.includes('status') || h.includes('สถานะ')) return 'status';
-  return label; // fallback: ใช้ชื่อเดิม
+  if (!h) return null;
+
+  // ---- ครั้งที่ประชุม (session) ----
+  if (h === 'session' ||
+      h.includes('ครั้งที่') ||
+      h.includes('ครั้งประชุม') ||
+      h.includes('การประชุมครั้งที่')) return 'session';
+
+  // ---- วันที่ประชุม (sessionDate) ----
+  if (h.includes('sessiondate') ||
+      h.includes('วันที่ประชุม') ||
+      h.includes('วันที่จัดประชุม') ||
+      (h.includes('วันที่') && !h.includes('สิ้นสุด')) ||
+      (h.includes('date') && !h.includes('update') && !h.includes('status'))) return 'sessionDate';
+
+  // ---- ประเภทเจ้าของเรื่อง (ownerType) — ต้องตรวจก่อน owner ----
+  if (h.includes('ownertype')           ||
+      h.includes('ประเภทเจ้าของ')        ||
+      h.includes('ประเภทหน่วยงาน')       ||
+      h.includes('ประเภทผู้รับผิดชอบ')   ||
+      h === 'ประเภท') return 'ownerType';
+
+  // ---- เจ้าของเรื่อง / หน่วยงาน (owner) ----
+  if (h.includes('owner')              ||
+      h.includes('เจ้าของเรื่อง')       ||
+      h.includes('หน่วยงานที่รับผิดชอบ') ||
+      h.includes('ผู้รับผิดชอบ')         ||
+      (h.includes('หน่วยงาน') && !h.includes('ประเภท'))) return 'owner';
+
+  // ---- เรื่อง / ญัตติ (topic) ----
+  if (h.includes('topic')    ||
+      h.includes('เรื่อง')    ||
+      h.includes('หัวข้อ')    ||
+      h.includes('ญัตติ')     ||
+      h.includes('วาระ')      ||
+      h.includes('เนื้อหา')) return 'topic';
+
+  // ---- มติที่ประชุม (resolution) — ต้องตรวจก่อน status ----
+  if (h.includes('resolution')                                  ||
+      h === 'มติ'                                               ||
+      h.includes('มติที่ประชุม')                                ||
+      h.includes('มติที่')                                      ||
+      h.includes('ผลมติ')                                       ||
+      h.includes('ผลการมติ')                                    ||
+      (h.startsWith('มติ') && !h.includes('สถานะ'))) return 'resolution';
+
+  // ---- รายละเอียดสถานะ / ความคืบหน้า (statusFull) — ต้องตรวจก่อน status ----
+  if (h.includes('statusfull')         ||
+      h.includes('รายละเอียดสถานะ')    ||
+      h.includes('ผลการดำเนินการ')      ||
+      h.includes('สถานะปัจจุบัน')       ||
+      h.includes('ความคืบหน้า')         ||
+      h.includes('progress')            ||
+      h.includes('รายละเอียด')) return 'statusFull';
+
+  // ---- สถานะ (status) ----
+  if (h.includes('status')     ||
+      h === 'สถานะ'             ||
+      h.includes('สถานะการ')   ||
+      h.includes('สถานะมติ')) return 'status';
+
+  // ไม่ทราบคอลัมน์ — คืน null เพื่อ skip
+  return null;
 }
 
-async function loadData() {
-  try {
-    setLoading(true);
-    const url = buildGvizUrl();
-    console.log('[Dashboard] Fetching data from:', url);
-    const response = await fetch(url, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
-    const text = await response.text();
-    // gviz ส่งคืนในรูป "google.visualization.Query.setResponse({...});" ต้องตัด prefix/suffix ออก
-    const jsonStart = text.indexOf('{');
-    const jsonEnd = text.lastIndexOf('}');
-    if (jsonStart === -1 || jsonEnd === -1) throw new Error('Invalid gviz response');
-    const json = JSON.parse(text.substring(jsonStart, jsonEnd + 1));
-
-    const cols = (json.table.cols || []).map(c => ({
-      key: mapHeader(c.label || c.id),
-      type: c.type || 'string'
-    }));
-    const rows = json.table.rows || [];
-
-    DATA = rows.map(row => {
-      const obj = { session: '', sessionDate: '', owner: '', ownerType: '',
-                    topic: '', resolution: '', status: '', statusFull: '' };
-      (row.c || []).forEach((cell, i) => {
-        const col = cols[i];
-        if (!col || !col.key) return;
-        // สำหรับคอลัมน์ประเภท date/datetime/number/timeofday → ใช้ cell.f (formatted) ก่อน เพราะ cell.v จะคืน "Date(2568,0,1)" แบบดิบ
-        // สำหรับ string → ใช้ cell.v ก่อน เพื่อให้ได้ข้อความเต็มที่ไม่ถูกตัดตามความกว้างคอลัมน์
-        const isNonString = col.type === 'date' || col.type === 'datetime' || col.type === 'number' || col.type === 'timeofday';
-        let val;
-        if (!cell) {
-          val = '';
-        } else if (isNonString) {
-          val = (cell.f != null && cell.f !== '') ? cell.f : (cell.v != null ? cell.v : '');
-        } else {
-          val = (cell.v != null && cell.v !== '') ? cell.v : (cell.f != null ? cell.f : '');
-        }
-        obj[col.key] = (val == null ? '' : String(val));
-      });
-      return obj;
-    }).filter(d => d.session && d.session.trim() !== ''); // ตัดแถวว่างออก
-
-    // Log รายการครั้งที่ประชุมทั้งหมดเพื่อให้ตรวจสอบได้ว่าดึงมาจาก Sheet อะไรบ้าง
-    const sessionList = [...new Set(DATA.map(d => d.session))];
-    console.log(`[Dashboard] Loaded ${DATA.length} rows from Google Sheets`);
-    console.log('[Dashboard] Sessions found:', sessionList);
-    if (sessionList.some(s => s && s.includes('7/2568'))) {
-      console.warn('[Dashboard] ⚠️ พบ "ครั้งที่ 7/2568" ในข้อมูลจาก Google Sheets — ถ้าไม่ต้องการให้แสดง กรุณาลบแถวเหล่านี้ใน Google Sheets โดยตรง');
-    }
-
-    filtered = [...DATA];
-    currentPage = 1;
-    resetSessionFilter();
-    initFilters();
-    updateAll();
-    setLoading(false, `อัพเดทข้อมูลล่าสุด: ${new Date().toLocaleString('th-TH')}`);
-  } catch (err) {
-    console.error('Error loading data from Google Sheets:', err);
-    setLoading(false, '⚠️ โหลดข้อมูลไม่สำเร็จ — ตรวจสอบว่า Google Sheets ตั้งเป็น "Anyone with the link can view"');
-    document.getElementById('table-body').innerHTML = '';
-    document.getElementById('table-empty').style.display = 'block';
-    document.getElementById('table-empty').textContent = '⚠️ โหลดข้อมูลจาก Google Sheets ไม่สำเร็จ';
-  }
-}
-
-function setLoading(isLoading, msg) {
-  const btn = document.getElementById('btn-refresh');
-  const info = document.getElementById('data-status');
-  if (btn) btn.disabled = !!isLoading;
-  if (btn) btn.textContent = isLoading ? '⏳ กำลังโหลด...' : '🔄 รีเฟรชข้อมูล';
-  if (info && msg) info.textContent = msg;
-}
-
-function resetSessionFilter() {
-  // ล้าง option เดิมของ filter "ครั้งที่ประชุม" ก่อนเติมใหม่ (ยกเว้น "ทั้งหมด")
-  const sel = document.getElementById('f-session');
-  while (sel.options.length > 1) sel.remove(1);
-}
-
-// DATA เดิมที่ถูก hardcode ไว้ถูกย้ายออก — โหลดจาก Google Sheets แทน ด้านล่างนี้เป็น placeholder
-// (ข้อมูล hardcode เดิมถูกลบออก — ตอนนี้ดึงจาก Google Sheets ผ่าน loadData())
-
+// ============================================================
+// State
+// ============================================================
+let DATA = [];
 let filtered = [];
 let currentPage = 1;
 const PAGE_SIZE = 10;
 let charts = {};
 
-// Init filters
+// ============================================================
+// loadData — ดึงข้อมูลจาก Google Sheets (gviz)
+// ============================================================
+async function loadData() {
+  try {
+    setLoading(true);
+    const url = buildGvizUrl();
+    console.log('[Dashboard] Fetching:', url);
+
+    const response = await fetch(url, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' }
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}`);
+
+    const text = await response.text();
+    const jsonStart = text.indexOf('{');
+    const jsonEnd   = text.lastIndexOf('}');
+    if (jsonStart === -1 || jsonEnd === -1) {
+      throw new Error('รูปแบบข้อมูลจาก Google Sheets ไม่ถูกต้อง (ไม่พบ JSON)');
+    }
+    const json = JSON.parse(text.substring(jsonStart, jsonEnd + 1));
+
+    if (!json.table) throw new Error('Google Sheets ตอบกลับข้อมูลไม่สมบูรณ์ — ตรวจสอบสิทธิ์การแชร์');
+
+    // --- แปลง column headers ---
+    const cols = (json.table.cols || []).map((c, i) => ({
+      idx:      i,
+      key:      mapHeader(c.label || c.id),
+      rawLabel: c.label || c.id || `col_${i}`,
+      type:     c.type || 'string'
+    }));
+
+    // Log สำหรับ debug
+    console.log('[Dashboard] Column mapping:');
+    cols.forEach(c => console.log(`  col[${c.idx}] "${c.rawLabel}" → "${c.key}"`));
+
+    const unmapped = cols.filter(c => c.key === null).map(c => c.rawLabel).filter(Boolean);
+    if (unmapped.length) console.warn('[Dashboard] Unmapped columns:', unmapped);
+
+    // --- แปลงแถวข้อมูล ---
+    const rows = json.table.rows || [];
+    DATA = rows.map(row => {
+      const obj = {
+        session: '', sessionDate: '', owner: '', ownerType: '',
+        topic: '',   resolution: '',  status: '', statusFull: ''
+      };
+      (row.c || []).forEach((cell, i) => {
+        const col = cols[i];
+        if (!col || col.key === null) return; // skip unmapped
+
+        const isNonString = (col.type === 'date' || col.type === 'datetime' ||
+                             col.type === 'number' || col.type === 'timeofday');
+        let val;
+        if (!cell || cell.v == null) {
+          val = '';
+        } else if (isNonString) {
+          // ใช้ formatted value (cell.f) ก่อน เพราะ cell.v จะเป็น "Date(2568,0,1)" แบบดิบ
+          val = (cell.f != null && cell.f !== '') ? cell.f : String(cell.v);
+        } else {
+          val = (cell.v !== '' && cell.v != null) ? cell.v : (cell.f != null ? cell.f : '');
+        }
+
+        // trim ทุกค่าเพื่อป้องกัน whitespace แฝง
+        obj[col.key] = String(val).trim();
+      });
+
+      // normalize สถานะ
+      obj.status = normalizeStatus(obj.status);
+
+      return obj;
+    }).filter(d => d.session && d.session.trim() !== ''); // ตัดแถวว่าง
+
+    // --- Diagnostic logging ---
+    const uniqStatuses   = [...new Set(DATA.map(d => d.status))].filter(Boolean);
+    const uniqSessions   = [...new Set(DATA.map(d => d.session))].filter(Boolean);
+    const uniqOwnerTypes = [...new Set(DATA.map(d => d.ownerType))].filter(Boolean);
+    console.log(`[Dashboard] Loaded ${DATA.length} rows`);
+    console.log('[Dashboard] Unique statuses:', uniqStatuses);
+    console.log('[Dashboard] Unique sessions:', uniqSessions);
+    console.log('[Dashboard] Unique ownerTypes:', uniqOwnerTypes);
+
+    // ตรวจหาสถานะที่ไม่รู้จัก
+    const knownStatuses = [STATUS_PENDING, STATUS_DONE, STATUS_OTHER, ''];
+    const unknownStatuses = [...new Set(
+      DATA.map(d => d.status).filter(s => !knownStatuses.includes(s))
+    )];
+
+    showDiagnostic(unknownStatuses, unmapped, DATA.length);
+
+    // --- อัพเดท UI ---
+    filtered = [...DATA];
+    currentPage = 1;
+    initFilters();
+    updateAll();
+
+    const ts = new Date().toLocaleString('th-TH');
+    setLoading(false, `อัพเดทข้อมูลล่าสุด: ${ts} · โหลด ${DATA.length} มติ`);
+
+  } catch (err) {
+    console.error('[Dashboard] Error:', err);
+    const msg = `⚠️ โหลดข้อมูลไม่สำเร็จ: ${err.message}`;
+    setLoading(false, msg + ' — กดปุ่ม "รีเฟรชข้อมูล" เพื่อลองอีกครั้ง');
+    document.getElementById('table-empty').textContent = msg;
+    document.getElementById('table-empty').style.display = 'block';
+  }
+}
+
+// ============================================================
+// showDiagnostic — แสดง banner แจ้งเตือนถ้ามีสถานะที่ไม่รู้จัก
+// ============================================================
+function showDiagnostic(unknownStatuses, unmappedCols, total) {
+  const banner = document.getElementById('diag-banner');
+  const lines = [];
+
+  if (unknownStatuses.length > 0) {
+    lines.push(
+      `⚠️ พบสถานะในข้อมูลที่ไม่ตรงกับนิยามมาตรฐาน: ` +
+      `<strong>"${unknownStatuses.join('", "')}"</strong> — ` +
+      `กรุณาตรวจสอบการสะกดในคอลัมน์ "สถานะ" ของ Google Sheets`
+    );
+  }
+  if (unmappedCols.length > 0) {
+    lines.push(
+      `ℹ️ คอลัมน์ที่ระบบไม่รู้จัก (ไม่ถูกนำมาแสดง): ` +
+      `<strong>"${unmappedCols.join('", "')}"</strong>`
+    );
+  }
+
+  if (lines.length > 0) {
+    banner.innerHTML = lines.join('<br>');
+    banner.style.display = 'block';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+// ============================================================
+// setLoading
+// ============================================================
+function setLoading(isLoading, msg) {
+  const btn  = document.getElementById('btn-refresh');
+  const info = document.getElementById('data-status');
+  if (btn) {
+    btn.disabled    = !!isLoading;
+    btn.textContent = isLoading ? '⏳ กำลังโหลด...' : '🔄 รีเฟรชข้อมูล';
+  }
+  if (info) {
+    if (msg) info.textContent = msg;
+    else if (isLoading) info.textContent = 'กำลังโหลดข้อมูลจาก Google Sheets…';
+  }
+}
+
+// ============================================================
+// initFilters — สร้าง options จากข้อมูลจริง (ไม่ hardcode)
+// ============================================================
 function initFilters() {
-  const sessions = [...new Set(DATA.map(d => d.session))];
-  const sel = document.getElementById('f-session');
-  sessions.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s; opt.textContent = s;
-    sel.appendChild(opt);
+  // ---- ครั้งที่ประชุม ----
+  const sessEl = document.getElementById('f-session');
+  while (sessEl.options.length > 1) sessEl.remove(1);
+  [...new Set(DATA.map(d => d.session))].filter(Boolean).forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    sessEl.appendChild(o);
+  });
+
+  // ---- สถานะ (dynamic จากข้อมูลจริง) ----
+  const stEl = document.getElementById('f-status');
+  while (stEl.options.length > 1) stEl.remove(1);
+  [...new Set(DATA.map(d => d.status))].filter(Boolean).sort().forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    stEl.appendChild(o);
+  });
+
+  // ---- ประเภทเจ้าของเรื่อง (dynamic จากข้อมูลจริง) ----
+  const owEl = document.getElementById('f-owner');
+  while (owEl.options.length > 1) owEl.remove(1);
+  [...new Set(DATA.map(d => d.ownerType))].filter(Boolean).sort().forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    owEl.appendChild(o);
   });
 }
 
+// ============================================================
+// applyFilters / resetFilters
+// ============================================================
 function applyFilters() {
   const session = document.getElementById('f-session').value;
-  const status = document.getElementById('f-status').value;
-  const owner = document.getElementById('f-owner').value;
-  const search = document.getElementById('f-search').value.toLowerCase().trim();
+  const status  = document.getElementById('f-status').value;
+  const owner   = document.getElementById('f-owner').value;
+  const search  = document.getElementById('f-search').value.toLowerCase().trim();
 
   filtered = DATA.filter(d => {
-    if (session && d.session !== session) return false;
-    if (status && d.status !== status) return false;
-    if (owner && d.ownerType !== owner) return false;
-    if (search && !d.topic.toLowerCase().includes(search) && !d.owner.toLowerCase().includes(search)) return false;
+    if (session && d.session   !== session) return false;
+    if (status  && d.status    !== status)  return false;
+    if (owner   && d.ownerType !== owner)   return false;
+    if (search  && !d.topic.toLowerCase().includes(search) &&
+                   !d.owner.toLowerCase().includes(search)) return false;
     return true;
   });
 
@@ -1000,14 +1194,17 @@ function applyFilters() {
 
 function resetFilters() {
   document.getElementById('f-session').value = '';
-  document.getElementById('f-status').value = '';
-  document.getElementById('f-owner').value = '';
-  document.getElementById('f-search').value = '';
+  document.getElementById('f-status').value  = '';
+  document.getElementById('f-owner').value   = '';
+  document.getElementById('f-search').value  = '';
   filtered = [...DATA];
   currentPage = 1;
   updateAll();
 }
 
+// ============================================================
+// updateAll
+// ============================================================
 function updateAll() {
   updateKPIs();
   updateCharts();
@@ -1016,29 +1213,35 @@ function updateAll() {
   updateTable();
 }
 
+// ============================================================
+// updateKPIs
+// ============================================================
 function updateKPIs() {
-  const total = filtered.length;
-  const pending = filtered.filter(d => d.status === 'อยู่ระหว่างดำเนินการ').length;
-  const done = filtered.filter(d => d.status === 'แล้วเสร็จ').length;
-  const sessions = new Set(filtered.map(d => d.session)).size;
+  const total   = filtered.length;
+  const pending = filtered.filter(d => d.status === STATUS_PENDING).length;
+  const done    = filtered.filter(d => d.status === STATUS_DONE).length;
+  const sessCount = new Set(filtered.map(d => d.session)).size;
 
-  document.getElementById('kpi-total').textContent = total;
-  document.getElementById('kpi-sessions').textContent = sessions;
-  document.getElementById('kpi-pending').textContent = pending;
-  document.getElementById('kpi-done').textContent = done;
-  document.getElementById('kpi-pending-pct').textContent = total ? Math.round(pending/total*100)+'%' : '0%';
-  document.getElementById('kpi-done-pct').textContent = total ? Math.round(done/total*100)+'%' : '0%';
-  document.getElementById('kpi-sess-count').textContent = sessions;
-  document.getElementById('fc-count').textContent = total;
-  document.getElementById('hdr-total').textContent = total;
+  document.getElementById('kpi-total').textContent       = total;
+  document.getElementById('kpi-sessions').textContent    = sessCount;
+  document.getElementById('kpi-pending').textContent     = pending;
+  document.getElementById('kpi-done').textContent        = done;
+  document.getElementById('kpi-pending-pct').textContent = total ? Math.round(pending / total * 100) + '%' : '0%';
+  document.getElementById('kpi-done-pct').textContent    = total ? Math.round(done    / total * 100) + '%' : '0%';
+  document.getElementById('kpi-sess-count').textContent  = sessCount;
+  document.getElementById('fc-count').textContent        = total;
+  document.getElementById('hdr-total').textContent       = total;
 }
 
+// ============================================================
+// updateCharts
+// ============================================================
 function updateCharts() {
-  // Donut
-  const pending = filtered.filter(d => d.status === 'อยู่ระหว่างดำเนินการ').length;
-  const done = filtered.filter(d => d.status === 'แล้วเสร็จ').length;
-  const other = filtered.filter(d => d.status === 'อื่นๆ').length;
+  const pending = filtered.filter(d => d.status === STATUS_PENDING).length;
+  const done    = filtered.filter(d => d.status === STATUS_DONE).length;
+  const other   = filtered.filter(d => d.status !== STATUS_PENDING && d.status !== STATUS_DONE).length;
 
+  // Donut chart
   if (charts.donut) charts.donut.destroy();
   charts.donut = new Chart(document.getElementById('chart-donut'), {
     type: 'doughnut',
@@ -1056,15 +1259,27 @@ function updateCharts() {
       responsive: true, maintainAspectRatio: false,
       cutout: '65%',
       plugins: {
-        legend: { position: 'bottom', labels: { font: { family: 'Sarabun', size: 12 }, padding: 12, boxWidth: 12 } },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} เรื่อง` } }
+        legend: {
+          position: 'bottom',
+          labels: { font: { family: 'Sarabun', size: 12 }, padding: 12, boxWidth: 12 }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${ctx.raw} เรื่อง` +
+                          (filtered.length ? ` (${Math.round(ctx.raw / filtered.length * 100)}%)` : '')
+          }
+        }
       }
     }
   });
 
-  // Owner bar
+  // Owner bar chart
   const ownerCounts = {};
-  filtered.forEach(d => ownerCounts[d.ownerType] = (ownerCounts[d.ownerType]||0)+1);
+  filtered.forEach(d => {
+    const k = d.ownerType || '(ไม่ระบุ)';
+    ownerCounts[k] = (ownerCounts[k] || 0) + 1;
+  });
+  const ownerColors = ['#2d6a4f', '#52b788', '#90caf9', '#f4a261', '#e9c46a'];
   if (charts.owner) charts.owner.destroy();
   charts.owner = new Chart(document.getElementById('chart-owner'), {
     type: 'bar',
@@ -1073,13 +1288,16 @@ function updateCharts() {
       datasets: [{
         label: 'จำนวนมติ',
         data: Object.values(ownerCounts),
-        backgroundColor: ['#2d6a4f','#52b788','#90caf9'],
+        backgroundColor: Object.keys(ownerCounts).map((_, i) => ownerColors[i % ownerColors.length]),
         borderRadius: 6, borderSkipped: false
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw} มติ` } } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw} มติ` } }
+      },
       scales: {
         x: { grid: { color: '#f0f5ee' }, ticks: { font: { family: 'Sarabun', size: 12 } } },
         y: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 12 } } }
@@ -1087,54 +1305,90 @@ function updateCharts() {
     }
   });
 
-  // Session bar
-  const sessionCounts = {};
-  filtered.forEach(d => sessionCounts[d.session] = (sessionCounts[d.session]||0)+1);
-  const sessKeys = Object.keys(sessionCounts);
+  // Session bar chart (stacked: pending vs done)
+  const sessMap = {};
+  filtered.forEach(d => {
+    if (!sessMap[d.session]) sessMap[d.session] = { pending: 0, done: 0, other: 0 };
+    if (d.status === STATUS_PENDING)      sessMap[d.session].pending++;
+    else if (d.status === STATUS_DONE)    sessMap[d.session].done++;
+    else                                  sessMap[d.session].other++;
+  });
+  const sessKeys = Object.keys(sessMap);
   if (charts.bar) charts.bar.destroy();
   charts.bar = new Chart(document.getElementById('chart-bar'), {
     type: 'bar',
     data: {
       labels: sessKeys,
-      datasets: [{
-        label: 'มติ',
-        data: sessKeys.map(k => sessionCounts[k]),
-        backgroundColor: sessKeys.map((_, i) => i % 2 === 0 ? '#2d6a4f' : '#52b788'),
-        borderRadius: 5
-      }]
+      datasets: [
+        {
+          label: 'ระหว่างดำเนินการ',
+          data: sessKeys.map(k => sessMap[k].pending),
+          backgroundColor: '#f4a261',
+          borderRadius: 4
+        },
+        {
+          label: 'แล้วเสร็จ',
+          data: sessKeys.map(k => sessMap[k].done),
+          backgroundColor: '#52b788',
+          borderRadius: 4
+        },
+        {
+          label: 'อื่นๆ',
+          data: sessKeys.map(k => sessMap[k].other),
+          backgroundColor: '#90caf9',
+          borderRadius: 4
+        }
+      ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw} มติ` } } },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: { font: { family: 'Sarabun', size: 11 }, boxWidth: 12, padding: 10 }
+        },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw} มติ` } }
+      },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 11 }, maxRotation: 45 } },
-        y: { grid: { color: '#f0f5ee' }, ticks: { font: { family: 'Sarabun', size: 12 }, stepSize: 1 } }
+        x: {
+          stacked: true,
+          grid: { display: false },
+          ticks: { font: { family: 'Sarabun', size: 11 }, maxRotation: 45 }
+        },
+        y: {
+          stacked: true,
+          grid: { color: '#f0f5ee' },
+          ticks: { font: { family: 'Sarabun', size: 12 }, stepSize: 1 }
+        }
       }
     }
   });
 }
 
+// ============================================================
+// updateTimeline
+// ============================================================
 function updateTimeline() {
   const wrap = document.getElementById('timeline-wrap');
-  const sessionData = {};
+  const sessData = {};
   filtered.forEach(d => {
-    if (!sessionData[d.session]) sessionData[d.session] = { pending: 0, done: 0, other: 0, total: 0 };
-    sessionData[d.session].total++;
-    if (d.status === 'อยู่ระหว่างดำเนินการ') sessionData[d.session].pending++;
-    else if (d.status === 'แล้วเสร็จ') sessionData[d.session].done++;
-    else sessionData[d.session].other++;
+    if (!sessData[d.session]) sessData[d.session] = { pending: 0, done: 0, other: 0, total: 0 };
+    sessData[d.session].total++;
+    if      (d.status === STATUS_PENDING) sessData[d.session].pending++;
+    else if (d.status === STATUS_DONE)    sessData[d.session].done++;
+    else                                  sessData[d.session].other++;
   });
 
-  const maxTotal = Math.max(...Object.values(sessionData).map(s => s.total), 1);
-  const sessions = Object.entries(sessionData);
+  const maxTotal = Math.max(...Object.values(sessData).map(s => s.total), 1);
 
-  wrap.innerHTML = sessions.map(([session, stats]) => `
+  wrap.innerHTML = Object.entries(sessData).map(([session, stats]) => `
     <div class="timeline-item">
       <div class="timeline-dot">${stats.total}</div>
       <div class="timeline-label">${session}</div>
       <div class="timeline-bar-wrap">
         <div class="timeline-bar">
-          <div class="timeline-bar-fill" style="width:${(stats.total/maxTotal)*100}%"></div>
+          <div class="timeline-bar-fill" style="width:${(stats.total / maxTotal * 100).toFixed(1)}%"></div>
         </div>
       </div>
       <div class="timeline-stats">
@@ -1145,80 +1399,95 @@ function updateTimeline() {
   `).join('');
 }
 
+// ============================================================
+// updatePending
+// ============================================================
 function updatePending() {
-  const items = filtered.filter(d => d.status === 'อยู่ระหว่างดำเนินการ');
+  const items = filtered.filter(d => d.status === STATUS_PENDING);
   document.getElementById('pending-badge').textContent = items.length + ' เรื่อง';
   const list = document.getElementById('pending-list');
   if (!items.length) {
     list.innerHTML = '<div class="pending-empty">🎉 ไม่มีมติที่ค้างอยู่ในขณะนี้</div>';
     return;
   }
-  list.innerHTML = items.slice(0, 15).map((d, i) => `
-    <div class="pending-item" onclick="openModal(${DATA.indexOf(d)})">
-      <div class="pending-item-session">${d.session}</div>
-      <div>
-        <div class="pending-item-topic">${d.topic.substring(0, 100)}${d.topic.length > 100 ? '...' : ''}</div>
-        <div class="pending-item-status">📌 ${d.statusFull.substring(0, 90)}${d.statusFull.length > 90 ? '...' : ''}</div>
-      </div>
-    </div>
-  `).join('');
+  list.innerHTML = items.slice(0, 15).map(d => {
+    const idx = DATA.indexOf(d);
+    const topic     = d.topic.length > 100 ? d.topic.substring(0, 100) + '…' : d.topic;
+    const statusTxt = d.statusFull ? (d.statusFull.length > 90 ? d.statusFull.substring(0, 90) + '…' : d.statusFull) : '(ไม่มีรายละเอียด)';
+    return `
+      <div class="pending-item" onclick="openModal(${idx})">
+        <div class="pending-item-session">${d.session}</div>
+        <div>
+          <div class="pending-item-topic">${topic}</div>
+          <div class="pending-item-status">📌 ${statusTxt}</div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
+// ============================================================
+// updateTable
+// ============================================================
 function updateTable() {
   const start = (currentPage - 1) * PAGE_SIZE;
-  const page = filtered.slice(start, start + PAGE_SIZE);
+  const page  = filtered.slice(start, start + PAGE_SIZE);
   const tbody = document.getElementById('table-body');
   const empty = document.getElementById('table-empty');
 
   if (!filtered.length) {
     tbody.innerHTML = '';
     empty.style.display = 'block';
+    empty.textContent = 'ไม่พบข้อมูลตามเงื่อนไขที่เลือก';
     document.getElementById('pagination').innerHTML = '';
     return;
   }
   empty.style.display = 'none';
 
-  const ownerBadge = t => {
-    if (t === 'สภาเกษตรกรจังหวัด') return 'badge-owner-province';
-    if (t === 'คณะกรรมการ') return 'badge-owner-committee';
+  const ownerBadgeCls = t => {
+    if (t && t.includes('จังหวัด'))   return 'badge-owner-province';
+    if (t && t.includes('คณะกรรมการ')) return 'badge-owner-committee';
     return 'badge-owner-office';
   };
-  const statusBadge = s => {
-    if (s === 'อยู่ระหว่างดำเนินการ') return 'badge-pending';
-    if (s === 'แล้วเสร็จ') return 'badge-done';
+  const statusBadgeCls = s => {
+    if (s === STATUS_PENDING) return 'badge-pending';
+    if (s === STATUS_DONE)    return 'badge-done';
     return 'badge-other';
   };
   const statusLabel = s => {
-    if (s === 'อยู่ระหว่างดำเนินการ') return '⏳ อยู่ระหว่างดำเนินการ';
-    if (s === 'แล้วเสร็จ') return '✅ แล้วเสร็จ';
-    return '📋 อื่นๆ';
+    if (s === STATUS_PENDING) return '⏳ อยู่ระหว่างดำเนินการ';
+    if (s === STATUS_DONE)    return '✅ แล้วเสร็จ';
+    return s ? `📋 ${s}` : '📋 อื่นๆ';
   };
 
-  tbody.innerHTML = page.map((d, idx) => `
-    <tr onclick="openModal(${DATA.indexOf(d)})">
-      <td style="color:var(--text-muted);font-size:12px">${start + idx + 1}</td>
-      <td class="session-col">${d.session}</td>
-      <td class="topic-col">${d.topic.substring(0, 80)}${d.topic.length > 80 ? '...' : ''}</td>
-      <td class="owner-col">${d.owner.substring(0, 40)}${d.owner.length > 40 ? '...' : ''}</td>
-      <td><span class="badge ${ownerBadge(d.ownerType)}">${d.ownerType}</span></td>
-      <td class="status-col"><span class="badge ${statusBadge(d.status)}">${statusLabel(d.status)}</span></td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = page.map((d, idx) => {
+    const globalIdx = DATA.indexOf(d);
+    const topic = d.topic.length > 80 ? d.topic.substring(0, 80) + '…' : d.topic;
+    const owner = d.owner.length > 40 ? d.owner.substring(0, 40) + '…' : d.owner;
+    return `
+      <tr onclick="openModal(${globalIdx})">
+        <td style="color:var(--text-muted);font-size:12px">${start + idx + 1}</td>
+        <td class="session-col">${d.session}</td>
+        <td class="topic-col">${topic}</td>
+        <td class="owner-col">${owner}</td>
+        <td><span class="badge ${ownerBadgeCls(d.ownerType)}">${d.ownerType || '—'}</span></td>
+        <td class="status-col"><span class="badge ${statusBadgeCls(d.status)}">${statusLabel(d.status)}</span></td>
+      </tr>`;
+  }).join('');
 
   // Pagination
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pag = document.getElementById('pagination');
   if (totalPages <= 1) { pag.innerHTML = ''; return; }
 
-  let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  let html = `<button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
   for (let i = 1; i <= totalPages; i++) {
     if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
-      html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+      html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
     } else if (Math.abs(i - currentPage) === 2) {
       html += `<span style="color:var(--text-muted);padding:0 4px;align-self:center">…</span>`;
     }
   }
-  html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+  html += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
   pag.innerHTML = html;
 }
 
@@ -1227,30 +1496,34 @@ function goPage(p) {
   if (p < 1 || p > totalPages) return;
   currentPage = p;
   updateTable();
+  window.scrollTo({ top: document.getElementById('table-body').getBoundingClientRect().top + window.scrollY - 20, behavior: 'smooth' });
 }
 
+// ============================================================
+// Modal
+// ============================================================
 function openModal(idx) {
   const d = DATA[idx];
-  document.getElementById('m-session').textContent = d.session;
-  document.getElementById('m-topic').textContent = d.topic;
-  document.getElementById('m-owner').textContent = d.owner;
-  document.getElementById('m-resolution').textContent = d.resolution;
-  
+  if (!d) return;
+  document.getElementById('m-session').textContent    = d.session    || '—';
+  document.getElementById('m-topic').textContent      = d.topic      || '—';
+  document.getElementById('m-owner').textContent      = d.owner      || '—';
+  document.getElementById('m-resolution').textContent = d.resolution || '(ไม่มีข้อมูลมติ)';
+  document.getElementById('m-status-full').textContent = d.statusFull || '(ไม่มีรายละเอียด)';
+
   const statusEl = document.getElementById('m-status-badge');
-  if (d.status === 'อยู่ระหว่างดำเนินการ') {
+  if (d.status === STATUS_PENDING) {
     statusEl.className = 'modal-status pending';
     statusEl.textContent = '⏳ อยู่ระหว่างดำเนินการ';
-  } else if (d.status === 'แล้วเสร็จ') {
+  } else if (d.status === STATUS_DONE) {
     statusEl.className = 'modal-status done';
     statusEl.textContent = '✅ ดำเนินการแล้วเสร็จ';
   } else {
     statusEl.className = 'modal-status other';
-    statusEl.textContent = '📋 อื่นๆ';
+    statusEl.textContent = d.status ? `📋 ${d.status}` : '📋 อื่นๆ';
   }
-  document.getElementById('m-status-full').textContent = d.statusFull;
   document.getElementById('modal-overlay').classList.add('open');
 }
-
 function closeModal(e) {
   if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
 }
@@ -1258,10 +1531,13 @@ function closeModalDirect() {
   document.getElementById('modal-overlay').classList.remove('open');
 }
 
-// Event listeners
-['f-session','f-status','f-owner'].forEach(id => {
-  document.getElementById(id).addEventListener('change', applyFilters);
-});
+// ============================================================
+// Event Listeners (ผูกครั้งเดียว ป้องกัน duplicate)
+// ============================================================
+document.getElementById('f-session').addEventListener('change', applyFilters);
+document.getElementById('f-status').addEventListener('change',  applyFilters);
+document.getElementById('f-owner').addEventListener('change',   applyFilters);
+
 let searchTimer;
 document.getElementById('f-search').addEventListener('input', () => {
   clearTimeout(searchTimer);
@@ -1270,19 +1546,13 @@ document.getElementById('f-search').addEventListener('input', () => {
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModalDirect(); });
 
-// โหลดข้อมูลจาก Google Sheets ครั้งแรกเมื่อหน้าเพจโหลด
-loadData();
+// ผูกปุ่ม refresh ครั้งเดียว
+document.getElementById('btn-refresh').addEventListener('click', loadData);
 
-// ผูกปุ่ม "รีเฟรช" กับฟังก์ชัน loadData
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('btn-refresh');
-  if (btn) btn.addEventListener('click', loadData);
-});
-// กรณี DOM โหลดเสร็จแล้วก่อน script นี้ ก็ผูกทันที
-(function(){
-  const btn = document.getElementById('btn-refresh');
-  if (btn) btn.addEventListener('click', loadData);
-})();
+// ============================================================
+// โหลดข้อมูลครั้งแรก
+// ============================================================
+loadData();
 </script>
 </body>
 </html>
