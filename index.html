@@ -9,6 +9,7 @@
 <title>Dashboard มติที่ประชุมสภาเกษตรกรแห่งชาติ</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <style>
   :root {
     --green-dark: #1a3d2b;
@@ -797,6 +798,11 @@
 </div>
 
 <script>
+// ลงทะเบียน chartjs-plugin-datalabels
+if (typeof ChartDataLabels !== 'undefined') {
+  Chart.register(ChartDataLabels);
+}
+
 // ============================================================
 // CONFIG
 // ============================================================
@@ -1344,8 +1350,8 @@ function updateOwnerPendingChart() {
     counts[key] = (counts[key] || 0) + 1;
   });
 
-  // เรียงจากน้อยไปมาก
-  const sorted = Object.entries(counts).sort((a, b) => a[1] - b[1]);
+  // เรียงจากมากไปน้อย (มากอยู่บนสุด = index 0 ใน horizontal bar)
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const labels = sorted.map(e => e[0]);
   const values = sorted.map(e => e[1]);
 
@@ -1399,13 +1405,22 @@ function updateOwnerPendingChart() {
           callbacks: {
             label: ctx => ` ${ctx.raw} เรื่องที่ค้าง`
           }
+        },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          formatter: v => v + ' เรื่อง',
+          font: { family: 'Sarabun', size: 12, weight: '700' },
+          color: '#1a3d2b',
+          padding: { left: 4 }
         }
       },
       scales: {
         x: {
           beginAtZero: true,
           ticks: { stepSize: 1, font: { family: 'Sarabun', size: 12 } },
-          grid: { color: '#f0f5ee' }
+          grid: { color: '#f0f5ee' },
+          grace: '20%'
         },
         y: {
           ticks: { font: { family: 'Sarabun', size: 13 }, autoSkip: false },
