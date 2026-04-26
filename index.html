@@ -410,7 +410,20 @@
   .pending-item-status {
     font-size: 12px;
     color: var(--text-muted);
-    margin-top: 2px;
+    margin-top: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+    position: relative;
+  }
+  .pending-item-hint {
+    font-size: 11px;
+    color: var(--green-mid);
+    margin-top: 4px;
+    font-weight: 600;
+    opacity: 0.75;
   }
   .pending-empty {
     text-align: center;
@@ -811,7 +824,6 @@
             <th>ครั้งที่</th>
             <th>เรื่อง</th>
             <th>เจ้าของเรื่อง</th>
-            <th>ประเภท</th>
             <th>สถานะ</th>
           </tr>
         </thead>
@@ -1411,15 +1423,17 @@ function updatePending() {
     return;
   }
   list.innerHTML = items.slice(0, 15).map(d => {
-    const idx = DATA.indexOf(d);
+    const idx       = DATA.indexOf(d);
     const topic     = d.topic.length > 100 ? d.topic.substring(0, 100) + '…' : d.topic;
-    const statusTxt = d.statusFull ? (d.statusFull.length > 90 ? d.statusFull.substring(0, 90) + '…' : d.statusFull) : '(ไม่มีรายละเอียด)';
+    const statusTxt = d.statusFull || '(ไม่มีรายละเอียด)';
+    const isLong    = d.statusFull && d.statusFull.length > 80;
     return `
       <div class="pending-item" onclick="openModal(${idx})">
         <div class="pending-item-session">${d.session}</div>
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="pending-item-topic">${topic}</div>
           <div class="pending-item-status">📌 ${statusTxt}</div>
+          ${isLong ? '<div class="pending-item-hint">คลิกเพื่อดูรายละเอียดเพิ่มเติม →</div>' : ''}
         </div>
       </div>`;
   }).join('');
@@ -1469,7 +1483,6 @@ function updateTable() {
         <td class="session-col">${d.session}</td>
         <td class="topic-col">${topic}</td>
         <td class="owner-col">${owner}</td>
-        <td><span class="badge ${ownerBadgeCls(d.ownerType)}">${d.ownerType || '—'}</span></td>
         <td class="status-col"><span class="badge ${statusBadgeCls(d.status)}">${statusLabel(d.status)}</span></td>
       </tr>`;
   }).join('');
