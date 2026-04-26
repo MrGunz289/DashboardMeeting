@@ -1272,7 +1272,8 @@ function updateCharts() {
             label: ctx => ` ${ctx.label}: ${ctx.raw} เรื่อง` +
                           (filtered.length ? ` (${Math.round(ctx.raw / filtered.length * 100)}%)` : '')
           }
-        }
+        },
+        datalabels: { display: false }
       }
     }
   });
@@ -1320,7 +1321,8 @@ function updateCharts() {
           position: 'top',
           labels: { font: { family: 'Sarabun', size: 11 }, boxWidth: 12, padding: 10 }
         },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw} มติ` } }
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw} มติ` } },
+        datalabels: { display: false }
       },
       scales: {
         x: {
