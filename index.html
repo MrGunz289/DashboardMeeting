@@ -230,7 +230,7 @@
   /* CHARTS ROW */
   .charts-row {
     display: grid;
-    grid-template-columns: 1fr 1fr 1.3fr;
+    grid-template-columns: 1fr 1.3fr;
     gap: 16px;
     margin-bottom: 24px;
   }
@@ -794,10 +794,6 @@
       <div class="chart-wrap"><canvas id="chart-donut"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title"><span>🏢</span> มติแยกตามประเภทเจ้าของเรื่อง</div>
-      <div class="chart-wrap"><canvas id="chart-owner"></canvas></div>
-    </div>
-    <div class="chart-card">
       <div class="chart-title"><span>📊</span> จำนวนมติแต่ละครั้งประชุม</div>
       <div class="chart-wrap"><canvas id="chart-bar"></canvas></div>
     </div>
@@ -1148,8 +1144,8 @@ async function loadData() {
     const unmappedForUI = unmapped.filter(l => !/^[A-Z]{1,2}$/.test(l));
     showDiagnostic(unknownStatuses, unmappedForUI, DATA.length);
 
-    // --- อัพเดท UI ---
-    filtered = [...DATA];
+    // --- อัพเดท UI (เรียงใหม่สุดก่อน) ---
+    filtered = sortNewestFirst(DATA);
     currentPage = 1;
     initFilters();
     updateAll();
@@ -1228,6 +1224,24 @@ function initFilters() {
 }
 
 // ============================================================
+// sortNewestFirst — เรียงจากครั้งประชุมล่าสุดไปเก่าสุด
+// รองรับรูปแบบ "ครั้งที่ 3/2568", "3/2568", "ครั้งที่ 3" ฯลฯ
+// ============================================================
+function sessionSortKey(session) {
+  // จับคู่รูปแบบ เลข/ปี เช่น "3/2568"
+  const m = session.match(/(\d+)\s*\/\s*(\d+)/);
+  if (m) return parseInt(m[2]) * 10000 + parseInt(m[1]);
+  // fallback: จับตัวเลขทั้งหมดแล้วคำนวณ key
+  const nums = session.match(/\d+/g);
+  if (nums && nums.length >= 2) return parseInt(nums[nums.length - 1]) * 10000 + parseInt(nums[0]);
+  if (nums && nums.length === 1) return parseInt(nums[0]);
+  return 0;
+}
+function sortNewestFirst(arr) {
+  return arr.slice().sort((a, b) => sessionSortKey(b.session) - sessionSortKey(a.session));
+}
+
+// ============================================================
 // applyFilters / resetFilters
 // ============================================================
 function applyFilters() {
@@ -1236,7 +1250,7 @@ function applyFilters() {
   const owner   = document.getElementById('f-owner').value;
   const search  = document.getElementById('f-search').value.toLowerCase().trim();
 
-  filtered = DATA.filter(d => {
+  const raw = DATA.filter(d => {
     if (session && d.session   !== session) return false;
     if (status  && d.status    !== status)  return false;
     if (owner   && d.ownerType !== owner)   return false;
@@ -1244,6 +1258,7 @@ function applyFilters() {
                    !d.owner.toLowerCase().includes(search)) return false;
     return true;
   });
+  filtered = sortNewestFirst(raw);
 
   currentPage = 1;
   updateAll();
@@ -1254,7 +1269,7 @@ function resetFilters() {
   document.getElementById('f-status').value  = '';
   document.getElementById('f-owner').value   = '';
   document.getElementById('f-search').value  = '';
-  filtered = [...DATA];
+  filtered = sortNewestFirst(DATA);
   currentPage = 1;
   updateAll();
 }
@@ -1326,38 +1341,6 @@ function updateCharts() {
                           (filtered.length ? ` (${Math.round(ctx.raw / filtered.length * 100)}%)` : '')
           }
         }
-      }
-    }
-  });
-
-  // Owner bar chart
-  const ownerCounts = {};
-  filtered.forEach(d => {
-    const k = d.ownerType || '(ไม่ระบุ)';
-    ownerCounts[k] = (ownerCounts[k] || 0) + 1;
-  });
-  const ownerColors = ['#2d6a4f', '#52b788', '#90caf9', '#f4a261', '#e9c46a'];
-  if (charts.owner) charts.owner.destroy();
-  charts.owner = new Chart(document.getElementById('chart-owner'), {
-    type: 'bar',
-    data: {
-      labels: Object.keys(ownerCounts),
-      datasets: [{
-        label: 'จำนวนมติ',
-        data: Object.values(ownerCounts),
-        backgroundColor: Object.keys(ownerCounts).map((_, i) => ownerColors[i % ownerColors.length]),
-        borderRadius: 6, borderSkipped: false
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.raw} มติ` } }
-      },
-      scales: {
-        x: { grid: { color: '#f0f5ee' }, ticks: { font: { family: 'Sarabun', size: 12 } } },
-        y: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 12 } } }
       }
     }
   });
@@ -1460,7 +1443,7 @@ function updateTimeline() {
 // updatePending
 // ============================================================
 function updatePending() {
-  const items = filtered.filter(d => d.status === STATUS_PENDING);
+  const items = sortNewestFirst(filtered.filter(d => d.status === STATUS_PENDING));
   document.getElementById('pending-badge').textContent = items.length + ' เรื่อง';
   const list = document.getElementById('pending-list');
   if (!items.length) {
