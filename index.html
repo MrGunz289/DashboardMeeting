@@ -880,42 +880,55 @@ function buildGvizUrl() {
 }
 
 // ============================================================
-// normalizeStatus — รองรับการสะกดที่หลากหลายของสถานะ
+// normalizeStatus — จำแนกสถานะจากทั้งข้อความสั้นและข้อความยาว
+// รองรับกรณีที่คอลัมน์ "สถานะ" ใน Google Sheets มีข้อความอธิบายยาว
 // ============================================================
 function normalizeStatus(raw) {
   if (!raw) return '';
-  // ตัด whitespace รอบข้างและช่องว่างซ้ำกลางประโยค
   const s = raw.replace(/\s+/g, ' ').trim();
   if (!s) return '';
 
-  // กลุ่ม "อยู่ระหว่างดำเนินการ"
-  if (s.includes('ระหว่างดำเนิน') ||
-      s.includes('กำลังดำเนิน')   ||
-      s.includes('อยู่ระหว่าง')   ||
-      s === 'ดำเนินการ'            ||
-      s.includes('ยังไม่เสร็จ')   ||
-      s.includes('อยู่ในระหว่าง')) {
+  // === กลุ่ม DONE — คำที่บ่งบอกว่าดำเนินการเสร็จสิ้นแล้ว ===
+  const DONE_KEYWORDS = [
+    'แล้วเสร็จ', 'เสร็จสิ้น', 'เสร็จแล้ว', 'เสร็จเรียบร้อย',
+    'เรียบร้อยแล้ว',       // "ดำเนินการ...เรียบร้อยแล้ว", "ลงนามเรียบร้อยแล้ว"
+    'รับทราบแล้ว',         // "คณะรัฐมนตรีรับทราบแล้ว"
+    'มีมติออกมา',          // "คณะรัฐมนตรีได้มีมติออกมาเรียบร้อยแล้ว"
+    'ดำเนินการแล้ว',       // "ดำเนินการส่งข้อมูล...แล้ว"
+    'ดำเนินการเสร็จ',
+    'จัดทำประกาศเรียบร้อย',
+    'จัดทำเรียบร้อย',
+    'ประกาศเรียบร้อย',
+    'ลงนามเรียบร้อย',
+  ];
+  if (DONE_KEYWORDS.some(k => s.includes(k))) return STATUS_DONE;
+
+  // === กลุ่ม PENDING — คำที่บ่งบอกว่ายังอยู่ระหว่างดำเนินการ ===
+  const PENDING_KEYWORDS = [
+    'อยู่ระหว่าง', 'ระหว่างดำเนิน', 'กำลังดำเนิน', 'อยู่ในระหว่าง',
+    'รอเสนอ', 'รอการพิจารณา', 'รอคณะรัฐมนตรี',
+    'ทบทวนรูปแบบ', 'ยังไม่เสร็จ', 'อยู่ในขั้นตอน',
+  ];
+  if (PENDING_KEYWORDS.some(k => s.includes(k))) return STATUS_PENDING;
+
+  // === กลุ่ม OTHER — ชื่อหน่วยงานเพียงอย่างเดียว (ไม่มีคำบรรยายสถานะ) ===
+  if (/^\([\u0E00-\u0E7F\s\/\.]+\)$/.test(s)) return STATUS_OTHER;
+  if (s.includes('อื่นๆ') || s.includes('อื่น ๆ') || s === 'อื่น') return STATUS_OTHER;
+
+  // === ข้อความยาว — วิเคราะห์จากบริบท ===
+  if (s.length > 30) {
+    // มีการส่ง/เสนอพร้อมระบุเลขหนังสือหรือวันที่ = เสร็จสิ้นแล้ว
+    if ((s.includes('เสนอ') || s.includes('ส่ง') || s.includes('จัดทำ') || s.includes('ประกาศ')) &&
+        (s.includes('ลงวันที่') || s.includes('เมื่อวันที่') || s.includes('หนังสือ') || s.includes('ลงนาม'))) {
+      return STATUS_DONE;
+    }
+    // มีคำ "รอ" = ยังรอดำเนินการ
+    if (s.includes('รอ')) return STATUS_PENDING;
+    // ข้อความยาวที่ไม่ชัดเจน → pending เป็น default
     return STATUS_PENDING;
   }
 
-  // กลุ่ม "แล้วเสร็จ"
-  if (s.includes('แล้วเสร็จ')         ||
-      s.includes('เสร็จสิ้น')          ||
-      s.includes('เสร็จแล้ว')          ||
-      s.includes('ดำเนินการเสร็จ')     ||
-      s.includes('เสร็จเรียบร้อย')     ||
-      s.includes('ดำเนินการแล้ว')      ||
-      s === 'เสร็จ') {
-    return STATUS_DONE;
-  }
-
-  // กลุ่ม "อื่นๆ"
-  if (s.includes('อื่นๆ') || s.includes('อื่น ๆ') || s === 'อื่น') {
-    return STATUS_OTHER;
-  }
-
-  // คืนค่าเดิม (ตัด whitespace แล้ว) ถ้าไม่ตรงกับกลุ่มใด
-  return s;
+  return s; // ส่งคืนค่าเดิมถ้าสั้นและไม่ตรงรูปแบบใด
 }
 
 // ============================================================
@@ -1034,7 +1047,10 @@ async function loadData() {
     console.log('[Dashboard] Column mapping:');
     cols.forEach(c => console.log(`  col[${c.idx}] "${c.rawLabel}" → "${c.key}"`));
 
-    const unmapped = cols.filter(c => c.key === null).map(c => c.rawLabel).filter(Boolean);
+    // กรองคอลัมน์ที่ไม่มี header จริง (ชื่อเป็นตัวอักษรเดี่ยว A-Z = Google Sheets column ID)
+    const unmapped = cols.filter(c => c.key === null)
+                         .map(c => c.rawLabel)
+                         .filter(l => l && !/^[A-Z]$/.test(l)); // ข้ามตัวอักษรเดี่ยว
     if (unmapped.length) console.warn('[Dashboard] Unmapped columns:', unmapped);
 
     // --- แปลงแถวข้อมูล ---
@@ -1065,6 +1081,11 @@ async function loadData() {
       });
 
       // normalize สถานะ
+      // ถ้าคอลัมน์ "สถานะ" มีข้อความยาวเกิน 50 ตัว = เป็นข้อความอธิบาย (statusFull)
+      // ให้ย้ายไปเก็บที่ statusFull (ถ้า statusFull ยังว่างอยู่) แล้วค่อย normalize status
+      if (obj.status.length > 50 && !obj.statusFull) {
+        obj.statusFull = obj.status;
+      }
       obj.status = normalizeStatus(obj.status);
 
       return obj;
@@ -1085,7 +1106,9 @@ async function loadData() {
       DATA.map(d => d.status).filter(s => !knownStatuses.includes(s))
     )];
 
-    showDiagnostic(unknownStatuses, unmapped, DATA.length);
+    // กรองคอลัมน์ที่ไม่มี header (ตัวอักษรเดี่ยว) ออกจาก UI warning
+    const unmappedForUI = unmapped.filter(l => !/^[A-Z]{1,2}$/.test(l));
+    showDiagnostic(unknownStatuses, unmappedForUI, DATA.length);
 
     // --- อัพเดท UI ---
     filtered = [...DATA];
@@ -1425,14 +1448,15 @@ function updatePending() {
   list.innerHTML = items.slice(0, 15).map(d => {
     const idx       = DATA.indexOf(d);
     const topic     = d.topic.length > 100 ? d.topic.substring(0, 100) + '…' : d.topic;
-    const statusTxt = d.statusFull || '(ไม่มีรายละเอียด)';
-    const isLong    = d.statusFull && d.statusFull.length > 80;
+    // แสดง statusFull ก่อน ถ้าไม่มีให้ fallback ไป status (กรณีข้อความสั้น)
+    const detailTxt = d.statusFull || d.status || '(ไม่มีรายละเอียด)';
+    const isLong    = detailTxt.length > 80;
     return `
       <div class="pending-item" onclick="openModal(${idx})">
         <div class="pending-item-session">${d.session}</div>
         <div style="flex:1;min-width:0">
           <div class="pending-item-topic">${topic}</div>
-          <div class="pending-item-status">📌 ${statusTxt}</div>
+          <div class="pending-item-status">📌 ${detailTxt}</div>
           ${isLong ? '<div class="pending-item-hint">คลิกเพื่อดูรายละเอียดเพิ่มเติม →</div>' : ''}
         </div>
       </div>`;
@@ -1522,7 +1546,8 @@ function openModal(idx) {
   document.getElementById('m-topic').textContent      = d.topic      || '—';
   document.getElementById('m-owner').textContent      = d.owner      || '—';
   document.getElementById('m-resolution').textContent = d.resolution || '(ไม่มีข้อมูลมติ)';
-  document.getElementById('m-status-full').textContent = d.statusFull || '(ไม่มีรายละเอียด)';
+  // แสดง statusFull ก่อน ถ้าไม่มีใช้ status แทน (รองรับชีทที่รวมไว้ในคอลัมน์เดียว)
+  document.getElementById('m-status-full').textContent = d.statusFull || d.status || '(ไม่มีรายละเอียด)';
 
   const statusEl = document.getElementById('m-status-badge');
   if (d.status === STATUS_PENDING) {
